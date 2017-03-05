@@ -5,6 +5,7 @@ var dirt;
 
 //Constants
 const maxMoves = 4;
+var gunSound = "gunSound";
 
 // Landscape Generation Vars
 var stageXdimens;
@@ -65,6 +66,7 @@ var p2XGrid = 30;
 function load() {
     queue = new createjs.LoadQueue(false);
     queue.on("complete", init, this);
+    queue.installPlugin(createjs.Sound);
     queue.loadManifest([
         { id: "p1TankPNG", src: "red_tank.png" },
         { id: "p1TankBarrel", src: "red_tank_barrel.png" },
@@ -76,7 +78,7 @@ function load() {
 function init() {
     stage = new createjs.Stage("canvas");
     g = new createjs.Graphics();
-
+    createjs.Sound.registerSound("gun.wav", gunSound);
     initButtons();
     landGeneration();
     addTanks();
@@ -222,15 +224,7 @@ function initButtons() {
     movesLeft.x = 205;
     movesLeft.y = 12;
 
-    fire.addEventListener("click", function() {
-        if (p1turn) {
-            p1turn = false;
-            p1MovesLeft = maxMoves;
-        } else {
-            p1turn = true;
-            p2MovesLeft = maxMoves;
-        }
-    });
+    fire.addEventListener("click", shoot);
     stage.addChild(fire);
 
     //Right move button
@@ -327,6 +321,16 @@ function get2DArray(size) {
     return arr;
 }
 
+function shoot() {
+    if (p1turn) {
+        p1turn = false;
+        p1MovesLeft = maxMoves;
+    } else {
+        p1turn = true;
+        p2MovesLeft = maxMoves;
+    }
+    createjs.Sound.play(gunSound); // play using id.  Could also use full source path or event.src.
+}
 
 function handleKeyDown(e) {
     switch (e.keyCode) {
@@ -363,10 +367,10 @@ function handleKeyUp(e) {
 }
 
 function rotateBarrel(shape) {
-    if ((p1RleftPressed || upKeyDown) && (shape.rotation > -180)) {
+    if ((p1RleftPressed || leftKeyDown) && (shape.rotation > -180)) {
         shape.rotation = shape.rotation - 1;
     }
-    if ((p1RrightPressed || downKeyDown) && (shape.rotation < 0)) {
+    if ((p1RrightPressed || rightKeyDown) && (shape.rotation < 0)) {
         shape.rotation = shape.rotation + 1;
     }
 }
