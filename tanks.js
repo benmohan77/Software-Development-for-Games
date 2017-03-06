@@ -10,6 +10,9 @@ const maxMoves = 4;
 var gunSound = "gunSound";
 var boomSound = "boomSound";
 var ripSound = "ripSound";
+var smokeSheetIMG = "smokeSheet";
+var smokeSheet;
+var animation;
 
 
 // Landscape Generation Vars
@@ -94,6 +97,7 @@ function load() {
         { id: "p1TankBarrel", src: "red_tank_barrel.png" },
         { id: "p2TankPNG", src: "green_tank.png" },
         { id: "p2TankBarrel", src: "green_tank_barrel.png" },
+        { id: "smokeSheet", src: "smoke.png"},
     ]);
 }
 
@@ -104,6 +108,23 @@ function init() {
     initButtons();
     landGeneration();
     addTanks();
+
+    smokeSheetIMG = queue.getResult("smokeSheet");
+
+    var data = {
+        images: ["smoke.png"],
+        frames: { width: 64, height: 64, regX: 32, regY: 32, count: 16 },
+        animations: {
+            start: {
+                frames: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
+                next: false
+            },
+        },
+        framerate: 20
+    };
+
+    smokeSheet = new createjs.SpriteSheet(data);
+    animation = new createjs.Sprite(smokeSheet, "start");
 
     createjs.Sound.registerSound("boom.wav", boomSound);
     createjs.Sound.registerSound("rip.wav", ripSound);
@@ -153,6 +174,9 @@ function tick(event) {
         stage.update();
         createjs.Sound.play(ripSound);
         createjs.Sound.mute = true;
+    }
+    if (animation.currentFrame > 14) {
+        stage.removeChild(animation);
     }
 
     // Rotate barrels
@@ -629,7 +653,15 @@ function rotateBarrel(shape) {
 function moveTankLeft() {
     if (!waitingForMissiles) {
         if (p1turn && (p1MovesLeft > 0)) {
+            animation.x = p1Tank.x;
+            animation.y = p1Tank.y;
+            animation.scaleX = .5;
+            animation.scaleY = .5;
+            animation.gotoAndPlay("start");
+            stage.addChild(animation);
+
             if (p1Tank.x > 0) {
+
                 p1XGrid--;
                 var pos = (blocks[p1XGrid].length);
                 p1Tank.x = landBlockSize * p1XGrid;
@@ -637,6 +669,12 @@ function moveTankLeft() {
                 p1MovesLeft--;
             }
         } else if (!p1turn && (p2MovesLeft > 0)) {
+            animation.x = p2Tank.x;
+            animation.y = p2Tank.y;
+            animation.scaleX = .5;
+            animation.scaleY = .5;
+            animation.gotoAndPlay("start");
+            stage.addChild(animation);
             if (p2Tank.x > 0) {
                 p2XGrid--;
                 var pos = (blocks[p2XGrid].length);
@@ -651,6 +689,12 @@ function moveTankLeft() {
 function moveTankRight() {
     if (!waitingForMissiles) {
         if (p1turn && (p1MovesLeft > 0)) {
+            animation.x = p1Tank.x;
+            animation.y = p1Tank.y;
+            animation.scaleX = .5;
+            animation.scaleY = .5;
+            animation.gotoAndPlay("start");
+            stage.addChild(animation);
             if (p1Tank.x < stageXdimens) {
                 p1XGrid++;
                 var pos = (blocks[p1XGrid].length);
@@ -659,7 +703,13 @@ function moveTankRight() {
                 p1MovesLeft--;
             }
         } else if (!p1turn && (p2MovesLeft > 0)) {
-            if (p2Tank.x < stageXdimens) {
+            animation.x = p2Tank.x;
+            animation.y = p2Tank.y;
+            animation.scaleX = .5;
+            animation.scaleY = .5;
+            animation.gotoAndPlay("start");
+            stage.addChild(animation);
+            if (p2Tank.x < stageXdimens) {                
                 p2XGrid++;
                 var pos = (blocks[p2XGrid].length);
                 p2Tank.x = landBlockSize * p2XGrid;
