@@ -54,10 +54,12 @@ const ARROW_KEY_LEFT = 37;
 const ARROW_KEY_UP = 38;
 const ARROW_KEY_RIGHT = 39;
 const ARROW_KEY_DOWN = 40;
+const SPACE_KEY = 32;
 var upKeyDown = false;
 var downKeyDown = false;
 var leftKeyDown = false;
 var rightKeyDown = false;
+var spaceKeyDown = false;
 
 var g;
 
@@ -77,8 +79,8 @@ var movesLeft;
 var powerLevel;
 
 //Tank x Index On GRID
-var p1XGrid = 5;
-var p2XGrid = 30;
+var p1XGrid;
+var p2XGrid;
 
 
 
@@ -169,6 +171,10 @@ function tick(event) {
     currentUpdateCount++;
 
     if (currentUpdateCount === updateDelay) {
+        // Shoot if space bar is pressed
+        if (spaceKeyDown && !waitingForMissiles)
+            shoot();
+
         if (activeMissiles.length > 0) {
             //console.log("Number of missiles: " + activeMissiles.length);
             var elemsToRemove = [];
@@ -249,13 +255,13 @@ function createMissile(explosionRadius, startingAngle, velocity, damageAmount, s
                 stage.removeChild(this);
 
                 // Remove health from tanks if they're close enough
-                p1dist = Math.sqrt(Math.pow(this.x - p1Tank.x, 2) + Math.pow(this.y - p1Tank.y, 2));
+                p1dist = Math.sqrt(Math.pow(this.x - (p1Tank.x + (landBlockSize / 2)), 2) + Math.pow(this.y - (p1Tank.y + (landBlockSize / 2)), 2));
                 if (p1dist <= this.explosionRadius) {
-                    p1Tank.health -= this.damageAmount;
+                    p1Tank.health -= parseInt((1 - (p1dist / this.explosionRadius)) * this.damageAmount);
                 }
-                p2dist = Math.sqrt(Math.pow(this.x - p2Tank.x, 2) + Math.pow(this.y - p2Tank.y, 2));
+                p2dist = Math.sqrt(Math.pow(this.x - (p2Tank.x + (landBlockSize / 2)), 2) + Math.pow(this.y - (p2Tank.y + (landBlockSize / 2)), 2));
                 if (p2dist <= this.explosionRadius) {
-                    p2Tank.health -= this.damageAmount;
+                    p2Tank.health -= parseInt((1 - (p2dist / this.explosionRadius)) * this.damageAmount);
                 }
                 console.log("p1 health: " + p1Tank.health);
                 console.log("p2 health: " + p2Tank.health);
@@ -327,6 +333,7 @@ function addTanks() {
 
     p2TankBarrel.y = 10;
     p2TankBarrel.x = 10;
+    p2TankBarrel.rotation = -180;
 
 
 
@@ -341,13 +348,15 @@ function addTanks() {
     p2Tank.health = 100;
 
     // Find the starting positions for the tanks
+    p1XGrid = 4;
+    p2XGrid = stageXblocks - 5;
     var p1pos = (blocks[p1XGrid].length); // 0;
     var p2pos = (blocks[p2XGrid].length); // 0;
 
     // Set the starting positions for the tanks
-    p1Tank.x = landBlockSize * 5
+    p1Tank.x = landBlockSize * p1XGrid;
     p1Tank.y = stageYdimens - (landBlockSize * p1pos);
-    p2Tank.x = (30) * landBlockSize;
+    p2Tank.x = p2XGrid * landBlockSize;
     p2Tank.y = stageYdimens - (landBlockSize * p2pos);
 
     stage.addChild(p1Tank);
@@ -546,11 +555,11 @@ function get2DArray(size) {
 function shoot() {
     if (!waitingForMissiles) {
         if (p1turn) {
-            activeMissiles.push(createMissile(60, -p1TankBarrel.rotation, p1Power / 7, 50, p1Tank.x + (landBlockSize / 2), p1Tank.y + (landBlockSize / 2)));
+            activeMissiles.push(createMissile(40, -p1TankBarrel.rotation, p1Power / 7, 50, p1Tank.x + (landBlockSize / 2), p1Tank.y + (landBlockSize / 2)));
             p1turn = false;
             p1MovesLeft = maxMoves;
         } else {
-            activeMissiles.push(createMissile(60, -p2TankBarrel.rotation, p2Power / 7, 50, p2Tank.x + (landBlockSize / 2), p2Tank.y + (landBlockSize / 2)));
+            activeMissiles.push(createMissile(40, -p2TankBarrel.rotation, p2Power / 7, 50, p2Tank.x + (landBlockSize / 2), p2Tank.y + (landBlockSize / 2)));
             p1turn = true;
             p2MovesLeft = maxMoves;
         }
@@ -565,6 +574,7 @@ function handleKeyDown(e) {
     switch (e.keyCode) {
         case ARROW_KEY_UP:
             upKeyDown = true;
+            console.log("up arrow up");
             break;
         case ARROW_KEY_DOWN:
             downKeyDown = true;
@@ -574,6 +584,11 @@ function handleKeyDown(e) {
             break;
         case ARROW_KEY_RIGHT:
             rightKeyDown = true;
+            break;
+        case SPACE_KEY:
+            spaceKeyDown = true;
+            break;
+        default:
             break;
     }
 }
@@ -591,6 +606,11 @@ function handleKeyUp(e) {
             break;
         case ARROW_KEY_RIGHT:
             rightKeyDown = false;
+            break;
+        case SPACE_KEY:
+            spaceKeyDown = false;
+            break;
+        default:
             break;
     }
 }
@@ -653,17 +673,17 @@ function moveTankRight() {
 function changePower() {
     if (!waitingForMissiles) {
         if (p1turn) {
-            if (pPowerUpPressed && p1Power < 100) {
+            if ((pPowerUpPressed || upKeyDown) && p1Power < 100) {
                 p1Power++;
             }
-            if (pPowerDownPressed && p1Power > 20) {
+            if ((pPowerDownPressed || downKeyDown) && p1Power > 20) {
                 p1Power--;
             }
         } else {
-            if (pPowerUpPressed && p2Power < 100) {
+            if ((pPowerUpPressed || upKeyDown) && p2Power < 100) {
                 p2Power++;
             }
-            if (pPowerDownPressed && p2Power > 20) {
+            if ((pPowerDownPressed || downKeyDown) && p2Power > 20) {
                 p2Power--;
             }
         }
