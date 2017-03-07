@@ -97,7 +97,7 @@ function load() {
         { id: "p1TankBarrel", src: "red_tank_barrel.png" },
         { id: "p2TankPNG", src: "green_tank.png" },
         { id: "p2TankBarrel", src: "green_tank_barrel.png" },
-        { id: "smokeSheet", src: "smoke.png"},
+        { id: "smokeSheet", src: "smoke.png" },
     ]);
 }
 
@@ -163,7 +163,7 @@ function tick(event) {
     if (p1Tank.health <= 0 || p2Tank.health <= 0) {
         createjs.Ticker.removeAllEventListeners();
         var gameover = new createjs.Text("Game Over", "30px Arial", "#000000");
-        gameover.x = 225;
+        gameover.x = 245;
         gameover.y = 225;
         stage.addChild(gameover);
         if (p1Tank.health <= 0) {
@@ -290,6 +290,45 @@ function createMissile(explosionRadius, startingAngle, velocity, damageAmount, s
                 console.log("p1 health: " + p1Tank.health);
                 console.log("p2 health: " + p2Tank.health);
 
+                // Attempt block destruction
+                var blocksToDelete = [];
+                for (var x in blocks) {
+                    for (var y in blocks[x]) {
+                        //console.log("hi: " + x + ", " + y);
+                        var blockDist = Math.sqrt(Math.pow(blocks[x][y].x + (landBlockSize / 2) - this.x, 2) + Math.pow(blocks[x][y].y + (landBlockSize / 2) - this.y, 2));
+                        if (blockDist <= this.explosionRadius * 0.75) {
+                            // Remove all blocks from here up
+                            for (var i = y; i < blocks[x].length; i++) {
+                                blocks[x][i].initialX = x;
+                                blocks[x][i].initialY = i;
+                                blocksToDelete.push(blocks[x][i]);
+                                //console.log("marking: " + x + ", " + i);
+                                //blocks[x].splice(y, 1);
+                                //blocks[x][y] = null;
+                            }
+                            break;
+                        }
+                    }
+                }
+                // Actually delete blocks
+                var currentX = -1;
+                var yOffset = 0;
+                for (var x in blocksToDelete) {
+                    var block = blocksToDelete[x];
+                    if (block.initialX !== currentX) {
+                        currentX = block.initialX;
+                        yOffset = 0;
+                    }
+                    stage.removeChild(block);
+                    blocks[block.initialX].splice(block.initialY - yOffset, 1);
+                    //console.log("deleting: " + block.initialX + ", " + block.initialY);
+                    yOffset++;
+                }
+                blocksToDelete = null;
+                // Move tanks to correct heights
+                positionTanks(parseInt(p1Tank.x / landBlockSize), parseInt(p2Tank.x / landBlockSize));
+                stage.update();
+
                 this.hasImpacted = true;
             });
         }
@@ -374,17 +413,29 @@ function addTanks() {
     // Find the starting positions for the tanks
     p1XGrid = 4;
     p2XGrid = stageXblocks - 5;
-    var p1pos = (blocks[p1XGrid].length); // 0;
-    var p2pos = (blocks[p2XGrid].length); // 0;
-
-    // Set the starting positions for the tanks
-    p1Tank.x = landBlockSize * p1XGrid;
-    p1Tank.y = stageYdimens - (landBlockSize * p1pos);
-    p2Tank.x = p2XGrid * landBlockSize;
-    p2Tank.y = stageYdimens - (landBlockSize * p2pos);
+    positionTanks(p1XGrid, p2XGrid);
 
     stage.addChild(p1Tank);
     stage.addChild(p2Tank);
+}
+
+function positionTanks(p1tankXpos, p2tankXpos) {
+    var p1pos = (blocks[p1tankXpos].length); // 0;
+    var p2pos = (blocks[p2tankXpos].length); // 0;
+
+    // Set the starting positions for the tanks
+    p1Tank.x = landBlockSize * p1tankXpos;
+    p1Tank.y = stageYdimens - (landBlockSize * p1pos);
+    p2Tank.x = p2tankXpos * landBlockSize;
+    p2Tank.y = stageYdimens - (landBlockSize * p2pos);
+
+    // Kill the tanks if they are out of bounds
+    if (p1Tank.y >= stageYdimens) {
+        p1Tank.health = 0;
+    }
+    if (p2Tank.y >= stageYdimens) {
+        p2Tank.health = 0;
+    }
 }
 
 function playerLabel() {
@@ -579,17 +630,35 @@ function get2DArray(size) {
 function shoot() {
     if (!waitingForMissiles) {
         if (p1turn) {
-            activeMissiles.push(createMissile(40, -p1TankBarrel.rotation, p1Power / 7, 50, p1Tank.x + (landBlockSize / 2), p1Tank.y + (landBlockSize / 2)));
+            activeMissiles.push(createMissile(40, -p1TankBarrel.rotation, p1Power / 7, 60, p1Tank.x + (landBlockSize / 2), p1Tank.y + (landBlockSize / 2)));
             p1turn = false;
             p1MovesLeft = maxMoves;
+
+            // Add smoke animation
+            animation.x = p1Tank.x + (landBlockSize / 2) + (12 * Math.cos(toRadians(p1TankBarrel.rotation)));
+            animation.y = p1Tank.y + (landBlockSize / 2) + (12 * Math.sin(toRadians(p1TankBarrel.rotation)));
+            animation.scaleX = .5;
+            animation.scaleY = .5;
+            animation.gotoAndPlay("start");
+            stage.addChild(animation);
         } else {
-            activeMissiles.push(createMissile(40, -p2TankBarrel.rotation, p2Power / 7, 50, p2Tank.x + (landBlockSize / 2), p2Tank.y + (landBlockSize / 2)));
+            activeMissiles.push(createMissile(40, -p2TankBarrel.rotation, p2Power / 7, 60, p2Tank.x + (landBlockSize / 2), p2Tank.y + (landBlockSize / 2)));
             p1turn = true;
             p2MovesLeft = maxMoves;
+
+            // Add smoke animation
+            animation.x = p2Tank.x + (landBlockSize / 2) + (12 * Math.cos(toRadians(p2TankBarrel.rotation)));
+            animation.y = p2Tank.y + (landBlockSize / 2) + (12 * Math.sin(toRadians(p2TankBarrel.rotation)));
+            animation.scaleX = .5;
+            animation.scaleY = .5;
+            animation.gotoAndPlay("start");
+            stage.addChild(animation);
         }
         for (var i in activeMissiles) {
             stage.addChild(activeMissiles[i]);
+            //stage.setChildIndex(activeMissiles[i], 0);
         }
+
         createjs.Sound.play(gunSound); // play using id.  Could also use full source path or event.src.
     }
 }
@@ -653,15 +722,15 @@ function rotateBarrel(shape) {
 function moveTankLeft() {
     if (!waitingForMissiles) {
         if (p1turn && (p1MovesLeft > 0)) {
-            animation.x = p1Tank.x;
-            animation.y = p1Tank.y;
-            animation.scaleX = .5;
-            animation.scaleY = .5;
-            animation.gotoAndPlay("start");
-            stage.addChild(animation);
+            //// Add smoke animation
+            //animation.x = p1Tank.x + (landBlockSize / 2);
+            //animation.y = p1Tank.y + (landBlockSize / 2);
+            //animation.scaleX = .5;
+            //animation.scaleY = .5;
+            //animation.gotoAndPlay("start");
+            //stage.addChild(animation);
 
             if (p1Tank.x > 0) {
-
                 p1XGrid--;
                 var pos = (blocks[p1XGrid].length);
                 p1Tank.x = landBlockSize * p1XGrid;
@@ -669,12 +738,14 @@ function moveTankLeft() {
                 p1MovesLeft--;
             }
         } else if (!p1turn && (p2MovesLeft > 0)) {
-            animation.x = p2Tank.x;
-            animation.y = p2Tank.y;
-            animation.scaleX = .5;
-            animation.scaleY = .5;
-            animation.gotoAndPlay("start");
-            stage.addChild(animation);
+            //// Add smoke animation
+            //animation.x = p2Tank.x + (landBlockSize / 2);
+            //animation.y = p2Tank.y + (landBlockSize / 2);
+            //animation.scaleX = .5;
+            //animation.scaleY = .5;
+            //animation.gotoAndPlay("start");
+            //stage.addChild(animation);
+
             if (p2Tank.x > 0) {
                 p2XGrid--;
                 var pos = (blocks[p2XGrid].length);
@@ -689,13 +760,15 @@ function moveTankLeft() {
 function moveTankRight() {
     if (!waitingForMissiles) {
         if (p1turn && (p1MovesLeft > 0)) {
-            animation.x = p1Tank.x;
-            animation.y = p1Tank.y;
-            animation.scaleX = .5;
-            animation.scaleY = .5;
-            animation.gotoAndPlay("start");
-            stage.addChild(animation);
-            if (p1Tank.x < stageXdimens) {
+            //// Add smoke animation
+            //animation.x = p1Tank.x + (landBlockSize / 2);
+            //animation.y = p1Tank.y + (landBlockSize / 2);
+            //animation.scaleX = .5;
+            //animation.scaleY = .5;
+            //animation.gotoAndPlay("start");
+            //stage.addChild(animation);
+
+            if (p1Tank.x < stageXdimens - landBlockSize) {
                 p1XGrid++;
                 var pos = (blocks[p1XGrid].length);
                 p1Tank.x = landBlockSize * p1XGrid;
@@ -703,13 +776,15 @@ function moveTankRight() {
                 p1MovesLeft--;
             }
         } else if (!p1turn && (p2MovesLeft > 0)) {
-            animation.x = p2Tank.x;
-            animation.y = p2Tank.y;
-            animation.scaleX = .5;
-            animation.scaleY = .5;
-            animation.gotoAndPlay("start");
-            stage.addChild(animation);
-            if (p2Tank.x < stageXdimens) {                
+            //// Add smoke animation
+            //animation.x = p2Tank.x + (landBlockSize / 2);
+            //animation.y = p2Tank.y + (landBlockSize / 2);
+            //animation.scaleX = .5;
+            //animation.scaleY = .5;
+            //animation.gotoAndPlay("start");
+            //stage.addChild(animation);
+
+            if (p2Tank.x < stageXdimens - landBlockSize) {
                 p2XGrid++;
                 var pos = (blocks[p2XGrid].length);
                 p2Tank.x = landBlockSize * p2XGrid;
