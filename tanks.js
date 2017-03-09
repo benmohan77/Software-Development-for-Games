@@ -266,7 +266,7 @@ function createMissile(explosionRadius, startingAngle, velocity, damageAmount, s
         //console.log("blocks[xBlockPos].length: " + blocks[xBlockPos].length);
         //console.log("blocks[xBlockPos].length * landBlockSize: " + (blocks[xBlockPos].length * landBlockSize));
         //console.log("stageYdimens - (blocks[xBlockPos].length * landBlockSize): " + (landBlockSize + stageYdimens - (blocks[xBlockPos].length * landBlockSize)));
-        if (!this.isExploding && xBlockPos > 0 && xBlockPos < blocks.length && this.y >= (landBlockSize + stageYdimens - (blocks[xBlockPos].length * landBlockSize))) {
+        if (!this.isExploding && xBlockPos >= 0 && xBlockPos < blocks.length && this.y >= (landBlockSize + stageYdimens - (blocks[xBlockPos].length * landBlockSize))) {
             // The missile has now impacted
             //this.hasImpacted = true;
             console.log("has impacted");
