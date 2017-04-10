@@ -32,23 +32,26 @@ var p1TankBarrel;
 var p2Tank;
 var p2TankBitmap;
 var p2TankBarrel;
+var playerTanks = [];
+var currentTank;
+var currentTankIndex;
 
 // Active Missile Vars
 var activeMissiles = [];
 var waitingForMissiles = false;
 
 //Player Control Vars
-var p1Rright;
-var p1Rleft;
-var p1RrightPressed;
-var p1RleftPressed;
-var pPowerUpPressed;
-var pPowerDownPressed;
-var pPowerUp;
-var pPowerDown;
-var pRight;
-var pLeft;
-var fire;
+var btnRotateRight;
+var btnRotateLeft;
+var btnRotateRightPressed;
+var btnRotateLeftPressed;
+var btnIncreasePowerPressed;
+var btnDecreasePowerPressed;
+var btnIncreasePower;
+var btnDecreasePower;
+var btnMoveRight;
+var btnMoveLeft;
+var btnFire;
 var p1MovesLeft = maxMoves;
 var p2MovesLeft = maxMoves;
 
@@ -75,11 +78,11 @@ var p2Power = 50;
 
 
 //Data displays
-var p1elev;
-var nowPlayingLabel;
-var healthLabel;
-var movesLeft;
-var powerLevel;
+var lblBarrelRotation;
+var lblNowPlaying;
+var lblHealth;
+var lblMovesLeft;
+var lblPowerLevel;
 
 //Tank x Index On GRID
 var p1XGrid;
@@ -130,19 +133,19 @@ function init() {
     createjs.Sound.registerSound("rip.wav", ripSound);
 
 
-    p1elev = new createjs.Text(p1TankBarrel.rotation, "10px Arial", "#000000");
-    p1elev.x = 95;
-    p1elev.y = 12;
-    stage.addChild(p1elev);
+    lblBarrelRotation = new createjs.Text("0", "10px Arial", "#000000");
+    lblBarrelRotation.x = 95;
+    lblBarrelRotation.y = 12;
+    stage.addChild(lblBarrelRotation);
 
-    nowPlayingLabel = new createjs.Text("Player: " + RED_TURN, "20px Arial", "#000000");
-    nowPlayingLabel.x = 500;
-    nowPlayingLabel.y = 10;
+    lblNowPlaying = new createjs.Text("Player: " + "", "20px Arial", "#000000");
+    lblNowPlaying.x = 500;
+    lblNowPlaying.y = 10;
 
-    healthLabel = new createjs.Text("Health: " + p1Tank.health + "/100", "15px Arial", "#000000");
-    healthLabel.x = 500;
-    healthLabel.y = 35;
-    stage.addChild(nowPlayingLabel, healthLabel);
+    lblHealth = new createjs.Text("Health: " + "0" + "/100", "15px Arial", "#000000");
+    lblHealth.x = 500;
+    lblHealth.y = 35;
+    stage.addChild(lblNowPlaying, lblHealth);
 
 
 
@@ -159,32 +162,60 @@ function init() {
 
 
 function tick(event) {
-    // Check if either tank is dead
-    if (p1Tank.health <= 0 || p2Tank.health <= 0) {
+    // Check to see if either all tanks are dead or all but one tank is dead
+    var deathCount = 0;
+    for (var i in playerTanks) {
+        if (playerTanks[i].isDead()) {
+            deathCount++;
+            stage.removeChild(playerTanks[i]);
+        }
+    }
+    if (deathCount >= playerTanks.length - 1) {
         createjs.Ticker.removeAllEventListeners();
         var gameover = new createjs.Text("Game Over", "30px Arial", "#000000");
-        gameover.x = 245;
-        gameover.y = 225;
+        gameover.x = (stageXdimens / 2) - 75;// 245; // 75px off center
+        gameover.y = (stageYdimens / 2) - 15;// 225; // 15px off center
         stage.addChild(gameover);
-        if (p1Tank.health <= 0) {
-            p1Tank.removeAllChildren();
-        } else {
-            p2Tank.removeAllChildren();
+        // Remove the dead players from the stage
+        // This will need to be moved so each dead player doesn't remain on screen until there is a winner
+        for (var i in playerTanks) {
+            if (playerTanks[i].isDead()) {
+                playerTanks[i].removeAllChildren();
+            }
         }
         stage.update();
         createjs.Sound.play(ripSound);
         createjs.Sound.mute = true;
     }
+    // Check if either tank is dead
+    // if (p1Tank.health <= 0 || p2Tank.health <= 0) {
+    //     createjs.Ticker.removeAllEventListeners();
+    //     var gameover = new createjs.Text("Game Over", "30px Arial", "#000000");
+    //     gameover.x = (stageXdimens / 2) - 75;// 245; // 75px off center
+    //     gameover.y = (stageYdimens / 2) - 15;// 225; // 15px off center
+    //     stage.addChild(gameover);
+    //     if (p1Tank.health <= 0) {
+    //         p1Tank.removeAllChildren();
+    //     } else {
+    //         p2Tank.removeAllChildren();
+    //     }
+    //     stage.update();
+    //     createjs.Sound.play(ripSound);
+    //     createjs.Sound.mute = true;
+    // }
+
+    // Remove the smoke animation once it is complete
     if (animation.currentFrame > 14) {
         stage.removeChild(animation);
     }
 
     // Rotate barrels
-    if (p1turn) {
-        rotateBarrel(p1TankBarrel);
-    } else {
-        rotateBarrel(p2TankBarrel);
-    }
+    rotateBarrel();
+    // if (p1turn) {
+    //     rotateBarrel(p1TankBarrel);
+    // } else {
+    //     rotateBarrel(p2TankBarrel);
+    // }
 
     // Update player labels
     playerLabel();
@@ -279,16 +310,24 @@ function createMissile(explosionRadius, startingAngle, velocity, damageAmount, s
                 stage.removeChild(this);
 
                 // Remove health from tanks if they're close enough
-                p1dist = Math.sqrt(Math.pow(this.x - (p1Tank.x + (landBlockSize / 2)), 2) + Math.pow(this.y - (p1Tank.y + (landBlockSize / 2)), 2));
-                if (p1dist <= this.explosionRadius) {
-                    p1Tank.health -= parseInt((1 - (p1dist / this.explosionRadius)) * this.damageAmount);
+                for (var i in playerTanks) {
+                    tankDistance = Math.sqrt(Math.pow(this.x - (playerTanks[i].x + (landBlockSize / 2)), 2) + Math.pow(this.y - (playerTanks[i].y + (landBlockSize / 2)), 2));
+                    if (tankDistance <= this.explosionRadius) {
+                        playerTanks[i].damageTank(parseInt((1 - (tankDistance / this.explosionRadius)) * this.damageAmount));
+                    }
                 }
-                p2dist = Math.sqrt(Math.pow(this.x - (p2Tank.x + (landBlockSize / 2)), 2) + Math.pow(this.y - (p2Tank.y + (landBlockSize / 2)), 2));
-                if (p2dist <= this.explosionRadius) {
-                    p2Tank.health -= parseInt((1 - (p2dist / this.explosionRadius)) * this.damageAmount);
-                }
-                console.log("p1 health: " + p1Tank.health);
-                console.log("p2 health: " + p2Tank.health);
+
+
+                // p1dist = Math.sqrt(Math.pow(this.x - (p1Tank.x + (landBlockSize / 2)), 2) + Math.pow(this.y - (p1Tank.y + (landBlockSize / 2)), 2));
+                // if (p1dist <= this.explosionRadius) {
+                //     p1Tank.health -= parseInt((1 - (p1dist / this.explosionRadius)) * this.damageAmount);
+                // }
+                // p2dist = Math.sqrt(Math.pow(this.x - (p2Tank.x + (landBlockSize / 2)), 2) + Math.pow(this.y - (p2Tank.y + (landBlockSize / 2)), 2));
+                // if (p2dist <= this.explosionRadius) {
+                //     p2Tank.health -= parseInt((1 - (p2dist / this.explosionRadius)) * this.damageAmount);
+                // }
+                // console.log("p1 health: " + p1Tank.health);
+                // console.log("p2 health: " + p2Tank.health);
 
                 // Attempt block destruction
                 var blocksToDelete = [];
@@ -326,7 +365,8 @@ function createMissile(explosionRadius, startingAngle, velocity, damageAmount, s
                 }
                 blocksToDelete = null;
                 // Move tanks to correct heights
-                positionTanks(parseInt(p1Tank.x / landBlockSize), parseInt(p2Tank.x / landBlockSize));
+                positionTanksHeight();
+                //positionTanks(parseInt(p1Tank.x / landBlockSize), parseInt(p2Tank.x / landBlockSize));
                 stage.update();
 
                 this.hasImpacted = true;
@@ -379,79 +419,135 @@ function veloc(time, Vo, X) {
 }
 
 function addTanks() {
-    // Get our images
-    p1TankPNG = new createjs.Bitmap(queue.getResult("p1TankPNG"));
-    p1TankBarrel = new createjs.Bitmap(queue.getResult("p1TankBarrel"));
-    p2TankPNG = new createjs.Bitmap(queue.getResult("p2TankPNG"));
-    p2TankBarrel = new createjs.Bitmap(queue.getResult("p2TankBarrel"));
+    // Add our tanks
+    playerTanks.push(new Tank("First Player", 0, "p1TankPNG", "p1TankBarrel"));
+    playerTanks.push(new Tank("Second Player", 90, "p2TankPNG", "p2TankBarrel"));
+    playerTanks.push(new Tank("Third Player", 90, "p1TankPNG", "p1TankBarrel"));
+    playerTanks.push(new Tank("Fourth Player", 180, "p2TankPNG", "p2TankBarrel"));
 
-    p1TankBarrel.regX = 0;
-    p1TankBarrel.regY = 2.5;
+    // Position each tank on the field
+    positionTanks();
 
-    p2TankBarrel.regX = 0;
-    p2TankBarrel.regY = 2.5;
+    for (var i in playerTanks) {
+        playerTanks[i].setMovesLeft(maxMoves);
+        stage.addChild(playerTanks[i]);
+    }
 
-    p1TankBarrel.x = 10;
-    p1TankBarrel.y = 10;
-
-    p2TankBarrel.y = 10;
-    p2TankBarrel.x = 10;
-    p2TankBarrel.rotation = -180;
+    currentTankIndex = 0;
+    currentTank = playerTanks[currentTankIndex];
 
 
 
-    p1Tank = new createjs.Container();
-    p1Tank.addChild(p1TankBarrel);
-    p1Tank.addChild(p1TankPNG);
-    p1Tank.health = 100;
+    // // Get our images
+    // p1TankPNG = new createjs.Bitmap(queue.getResult("p1TankPNG"));
+    // p1TankBarrel = new createjs.Bitmap(queue.getResult("p1TankBarrel"));
+    // p2TankPNG = new createjs.Bitmap(queue.getResult("p2TankPNG"));
+    // p2TankBarrel = new createjs.Bitmap(queue.getResult("p2TankBarrel"));
 
-    p2Tank = new createjs.Container();
-    p2Tank.addChild(p2TankBarrel);
-    p2Tank.addChild(p2TankPNG);
-    p2Tank.health = 100;
+    // p1TankBarrel.regX = 0;
+    // p1TankBarrel.regY = 2.5;
 
-    // Find the starting positions for the tanks
-    p1XGrid = 4;
-    p2XGrid = stageXblocks - 5;
-    positionTanks(p1XGrid, p2XGrid);
+    // p2TankBarrel.regX = 0;
+    // p2TankBarrel.regY = 2.5;
 
-    stage.addChild(p1Tank);
-    stage.addChild(p2Tank);
+    // p1TankBarrel.x = 10;
+    // p1TankBarrel.y = 10;
+
+    // p2TankBarrel.y = 10;
+    // p2TankBarrel.x = 10;
+    // p2TankBarrel.rotation = -180;
+
+
+
+    // p1Tank = new createjs.Container();
+    // p1Tank.addChild(p1TankBarrel);
+    // p1Tank.addChild(p1TankPNG);
+    // p1Tank.health = 100;
+
+    // p2Tank = new createjs.Container();
+    // p2Tank.addChild(p2TankBarrel);
+    // p2Tank.addChild(p2TankPNG);
+    // p2Tank.health = 100;
+
+    // // Find the starting positions for the tanks
+    // p1XGrid = 4;
+    // p2XGrid = stageXblocks - 5;
+    // positionTanks(p1XGrid, p2XGrid);
+
+    // stage.addChild(p1Tank);
+    // stage.addChild(p2Tank);
 }
 
-function positionTanks(p1tankXpos, p2tankXpos) {
-    var p1pos = (blocks[p1tankXpos].length); // 0;
-    var p2pos = (blocks[p2tankXpos].length); // 0;
-
-    // Set the starting positions for the tanks
-    p1Tank.x = landBlockSize * p1tankXpos;
-    p1Tank.y = stageYdimens - (landBlockSize * p1pos);
-    p2Tank.x = p2tankXpos * landBlockSize;
-    p2Tank.y = stageYdimens - (landBlockSize * p2pos);
-
-    // Kill the tanks if they are out of bounds
-    if (p1Tank.y >= stageYdimens) {
-        p1Tank.health = 0;
+// Used for initializing the positions of the tanks
+function positionTanks() {
+//function positionTanks(p1tankXpos, p2tankXpos) {
+    var divisionSize = stageXblocks / (playerTanks.length);
+    for (var i in playerTanks) {
+        var xPosition = (i * divisionSize) + (divisionSize / 2);
+        xPosition = (xPosition <= stageXblocks / 2) ? Math.floor(xPosition) : Math.ceil(xPosition);
+        playerTanks[i].x = xPosition * landBlockSize;
+        playerTanks[i].y = stageYdimens - (blocks[xPosition].length * landBlockSize);
     }
-    if (p2Tank.y >= stageYdimens) {
-        p2Tank.health = 0;
+
+
+
+    // var p1pos = (blocks[p1tankXpos].length); // 0;
+    // var p2pos = (blocks[p2tankXpos].length); // 0;
+
+    // // Set the starting positions for the tanks
+    // p1Tank.x = landBlockSize * p1tankXpos;
+    // p1Tank.y = stageYdimens - (landBlockSize * p1pos);
+    // p2Tank.x = p2tankXpos * landBlockSize;
+    // p2Tank.y = stageYdimens - (landBlockSize * p2pos);
+
+    // // Kill the tanks if they are out of bounds
+    // if (p1Tank.y >= stageYdimens) {
+    //     p1Tank.health = 0;
+    // }
+    // if (p2Tank.y >= stageYdimens) {
+    //     p2Tank.health = 0;
+    // }
+}
+
+// Used for repositioning the height of the tanks on the screen (perhaps after block desctruction)
+function positionTanksHeight() {
+    for (var i in playerTanks) {
+        var xPosition = parseInt(playerTanks[i].x / landBlockSize);
+        playerTanks[i].y = stageYdimens - (blocks[xPosition].length * landBlockSize);
     }
 }
 
 function playerLabel() {
-    if (p1turn) {
-        nowPlayingLabel.text = "Player: " + RED_TURN;
-        healthLabel.text = "Health: " + p1Tank.health + "/100";
-        p1elev.text = -(p1TankBarrel.rotation);
-        movesLeft.text = p1MovesLeft;
-        powerLevel.text = p1Power;
-    } else {
-        nowPlayingLabel.text = "Player: " + GREEN_TURN;
-        healthLabel.text = "Health: " + p2Tank.health + "/100";
-        p1elev.text = -(p2TankBarrel.rotation);
-        movesLeft.text = p2MovesLeft;
-        powerLevel.text = p2Power;
+    lblNowPlaying.text = "Player: " + currentTank.name;
+    var str = "=== Health ===";
+    for (var i in playerTanks) {
+        var addStr = "";
+        if (playerTanks[i].getHealth() < 10)
+            addStr = "00";
+        else if (playerTanks[i].getHealth() < 100)
+            addStr = "0";
+        str += "\n" + addStr + playerTanks[i].getHealth() + " | " + playerTanks[i].name;
     }
+    lblHealth.text = str;// "Health: " + currentTank.getHealth(); + "/100";
+    lblBarrelRotation.text = currentTank.getBarrelRotation();
+    lblMovesLeft.text = currentTank.getMovesLeft();
+    lblPowerLevel.text = currentTank.getPowerLevel();
+
+
+
+    // if (p1turn) {
+    //     lblNowPlaying.text = "Player: " + RED_TURN;
+    //     lblHealth.text = "Health: " + p1Tank.health + "/100";
+    //     lblBarrelRotation.text = -(p1TankBarrel.rotation);
+    //     lblMovesLeft.text = p1MovesLeft;
+    //     lblPowerLevel.text = p1Power;
+    // } else {
+    //     lblNowPlaying.text = "Player: " + GREEN_TURN;
+    //     lblHealth.text = "Health: " + p2Tank.health + "/100";
+    //     lblBarrelRotation.text = -(p2TankBarrel.rotation);
+    //     lblMovesLeft.text = p2MovesLeft;
+    //     lblPowerLevel.text = p2Power;
+    // }
 }
 
 //initializes the buttons for controlling the tanks
@@ -459,85 +555,85 @@ function initButtons() {
 
     //Control Button Initialization
     //Right Rotation button
-    p1Rright = new createjs.Shape();
-    p1Rright.graphics.beginStroke("#000000").beginFill("#000000").drawPolyStar(15, 15, 15, 3, .5, 0);
+    btnRotateRight = new createjs.Shape();
+    btnRotateRight.graphics.beginStroke("#000000").beginFill("#000000").drawPolyStar(15, 15, 15, 3, .5, 0);
 
 
-    p1Rright.on("mousedown", function () {
-        p1RrightPressed = true;
+    btnRotateRight.on("mousedown", function () {
+        btnRotateRightPressed = true;
     })
 
-    p1Rright.on("pressup", function () {
-        p1RrightPressed = false;
+    btnRotateRight.on("pressup", function () {
+        btnRotateRightPressed = false;
     });
 
     //Left rotation button
-    p1Rleft = new createjs.Shape();
-    p1Rleft.graphics.beginStroke("#000000").beginFill("#000000").drawPolyStar(15, 15, 15, 3, .5, 180);
+    btnRotateLeft = new createjs.Shape();
+    btnRotateLeft.graphics.beginStroke("#000000").beginFill("#000000").drawPolyStar(15, 15, 15, 3, .5, 180);
 
 
-    p1Rleft.on("mousedown", function () {
-        p1RleftPressed = true;
+    btnRotateLeft.on("mousedown", function () {
+        btnRotateLeftPressed = true;
     });
-    p1Rleft.on("pressup", function () {
-        p1RleftPressed = false;
+    btnRotateLeft.on("pressup", function () {
+        btnRotateLeftPressed = false;
     });
 
     //Fire button
-    fire = new createjs.Shape();
-    fire.graphics.beginStroke("#000000").beginFill("#ff0000").drawRect(0, 0, 100, 35);
-    fire.x = 340;
-    fire.y = 25;
+    btnFire = new createjs.Shape();
+    btnFire.graphics.beginStroke("#000000").beginFill("#ff0000").drawRect(0, 0, 100, 35);
+    btnFire.x = 340;
+    btnFire.y = 25;
     var text = new createjs.Text("FIRE", "22px Arial", "#000000");
     text.x = 365;
     text.y = 33;
 
     //Moves Left label
-    movesLeft = new createjs.Text("", "10px Arial", "#000000");
-    movesLeft.x = 202;
-    movesLeft.y = 12;
+    lblMovesLeft = new createjs.Text("", "10px Arial", "#000000");
+    lblMovesLeft.x = 202;
+    lblMovesLeft.y = 12;
 
-    fire.addEventListener("click", shoot);
-    stage.addChild(fire);
+    btnFire.addEventListener("click", shoot);
+    stage.addChild(btnFire);
 
     //Right move button
-    pRight = new createjs.Shape();
-    pRight.graphics.beginStroke("#000000").beginFill("#000000").drawPolyStar(15, 15, 15, 3, .5, 0);
-    pRight.addEventListener("click", moveTankRight);
+    btnMoveRight = new createjs.Shape();
+    btnMoveRight.graphics.beginStroke("#000000").beginFill("#000000").drawPolyStar(15, 15, 15, 3, .5, 0);
+    btnMoveRight.addEventListener("click", moveTankRight);
 
     //Left move button
-    pLeft = new createjs.Shape();
-    pLeft.graphics.beginStroke("#000000").beginFill("#000000").drawPolyStar(15, 15, 15, 3, .5, 180);
-    pLeft.addEventListener("click", moveTankLeft);
+    btnMoveLeft = new createjs.Shape();
+    btnMoveLeft.graphics.beginStroke("#000000").beginFill("#000000").drawPolyStar(15, 15, 15, 3, .5, 180);
+    btnMoveLeft.addEventListener("click", moveTankLeft);
 
     //Power down button;
-    pPowerDown = new createjs.Shape();
-    pPowerDown.graphics.beginStroke("#000000").beginFill("#000000").drawPolyStar(15, 15, 15, 3, .5, 180);
-    pPowerDown.on("mousedown", function () {
-        pPowerDownPressed = true;
+    btnDecreasePower = new createjs.Shape();
+    btnDecreasePower.graphics.beginStroke("#000000").beginFill("#000000").drawPolyStar(15, 15, 15, 3, .5, 180);
+    btnDecreasePower.on("mousedown", function () {
+        btnDecreasePowerPressed = true;
     });
-    pPowerDown.on("pressup", function () {
-        pPowerDownPressed = false;
+    btnDecreasePower.on("pressup", function () {
+        btnDecreasePowerPressed = false;
     });
 
     //Power Up Button
-    pPowerUp = new createjs.Shape();
-    pPowerUp.graphics.beginStroke("#000000").beginFill("#000000").drawPolyStar(15, 15, 15, 3, .5, 0);
-    pPowerUp.on("mousedown", function () {
-        pPowerUpPressed = true;
+    btnIncreasePower = new createjs.Shape();
+    btnIncreasePower.graphics.beginStroke("#000000").beginFill("#000000").drawPolyStar(15, 15, 15, 3, .5, 0);
+    btnIncreasePower.on("mousedown", function () {
+        btnIncreasePowerPressed = true;
     });
-    pPowerUp.on("pressup", function () {
-        pPowerUpPressed = false;
+    btnIncreasePower.on("pressup", function () {
+        btnIncreasePowerPressed = false;
     });
-    pPowerUp.x = 270;
-    pPowerUp.y = 25;
-    pPowerDown.x = 250;
-    pPowerDown.y = 25;
+    btnIncreasePower.x = 270;
+    btnIncreasePower.y = 25;
+    btnDecreasePower.x = 250;
+    btnDecreasePower.y = 25;
 
     //Power Labels
-    powerLevel = new createjs.Text("", "10px Arial", "#000000");
-    powerLevel.x = 285;
-    powerLevel.y = 12;
+    lblPowerLevel = new createjs.Text("", "10px Arial", "#000000");
+    lblPowerLevel.x = 285;
+    lblPowerLevel.y = 12;
 
     //Misc Labels
     var moves = new createjs.Text("Moves Left:", "10px Arial", "#000000");
@@ -552,13 +648,13 @@ function initButtons() {
     power.x = 250;
     power.y = 12;
 
-    p1Rright.x = 60;
-    p1Rright.y = p1Rleft.y = pRight.y = pLeft.y = 25;
-    p1Rleft.x = 40;
-    pRight.x = 170;
-    pLeft.x = 150;
+    btnRotateRight.x = 60;
+    btnRotateRight.y = btnRotateLeft.y = btnMoveRight.y = btnMoveLeft.y = 25;
+    btnRotateLeft.x = 40;
+    btnMoveRight.x = 170;
+    btnMoveLeft.x = 150;
 
-    stage.addChild(p1Rright, p1Rleft, p1elev, pRight, pLeft, text, movesLeft, moves, angle, pPowerDown, pPowerUp, power, powerLevel);
+    stage.addChild(btnRotateRight, btnRotateLeft, lblBarrelRotation, btnMoveRight, btnMoveLeft, text, lblMovesLeft, moves, angle, btnDecreasePower, btnIncreasePower, power, lblPowerLevel);
 }
 
 function landGeneration() {
@@ -629,31 +725,51 @@ function get2DArray(size) {
 
 function shoot() {
     if (!waitingForMissiles) {
-        if (p1turn) {
-            activeMissiles.push(createMissile(40, -p1TankBarrel.rotation, p1Power / 7, 60, p1Tank.x + (landBlockSize / 2), p1Tank.y + (landBlockSize / 2)));
-            p1turn = false;
-            p1MovesLeft = maxMoves;
+        activeMissiles.push(createMissile(40, currentTank.getBarrelRotation(), currentTank.getPowerLevel() / 7, 60, currentTank.x + (landBlockSize / 2), currentTank.y + (landBlockSize / 2)));
 
-            // Add smoke animation
-            animation.x = p1Tank.x + (landBlockSize / 2) + (12 * Math.cos(toRadians(p1TankBarrel.rotation)));
-            animation.y = p1Tank.y + (landBlockSize / 2) + (12 * Math.sin(toRadians(p1TankBarrel.rotation)));
-            animation.scaleX = .5;
-            animation.scaleY = .5;
-            animation.gotoAndPlay("start");
-            stage.addChild(animation);
-        } else {
-            activeMissiles.push(createMissile(40, -p2TankBarrel.rotation, p2Power / 7, 60, p2Tank.x + (landBlockSize / 2), p2Tank.y + (landBlockSize / 2)));
-            p1turn = true;
-            p2MovesLeft = maxMoves;
+        currentTank.setMovesLeft(maxMoves);
 
-            // Add smoke animation
-            animation.x = p2Tank.x + (landBlockSize / 2) + (12 * Math.cos(toRadians(p2TankBarrel.rotation)));
-            animation.y = p2Tank.y + (landBlockSize / 2) + (12 * Math.sin(toRadians(p2TankBarrel.rotation)));
-            animation.scaleX = .5;
-            animation.scaleY = .5;
-            animation.gotoAndPlay("start");
-            stage.addChild(animation);
-        }
+        // Add smoke animation
+        animation.x = currentTank.x + (landBlockSize / 2) + (12 * Math.cos(toRadians(-currentTank.getBarrelRotation())));
+        animation.y = currentTank.y + (landBlockSize / 2) + (12 * Math.sin(toRadians(-currentTank.getBarrelRotation())));
+        animation.scaleX = .5;
+        animation.scaleY = .5;
+        animation.gotoAndPlay("start");
+        stage.addChild(animation);
+
+        // Change turns
+        do {
+        currentTankIndex = (currentTankIndex + 1) % playerTanks.length;
+        currentTank = playerTanks[currentTankIndex];
+        } while (currentTank.isDead());
+
+
+
+        // if (p1turn) {
+        //     activeMissiles.push(createMissile(40, -p1TankBarrel.rotation, p1Power / 7, 60, p1Tank.x + (landBlockSize / 2), p1Tank.y + (landBlockSize / 2)));
+        //     p1turn = false;
+        //     p1MovesLeft = maxMoves;
+
+        //     // Add smoke animation
+        //     animation.x = p1Tank.x + (landBlockSize / 2) + (12 * Math.cos(toRadians(p1TankBarrel.rotation)));
+        //     animation.y = p1Tank.y + (landBlockSize / 2) + (12 * Math.sin(toRadians(p1TankBarrel.rotation)));
+        //     animation.scaleX = .5;
+        //     animation.scaleY = .5;
+        //     animation.gotoAndPlay("start");
+        //     stage.addChild(animation);
+        // } else {
+        //     activeMissiles.push(createMissile(40, -p2TankBarrel.rotation, p2Power / 7, 60, p2Tank.x + (landBlockSize / 2), p2Tank.y + (landBlockSize / 2)));
+        //     p1turn = true;
+        //     p2MovesLeft = maxMoves;
+
+        //     // Add smoke animation
+        //     animation.x = p2Tank.x + (landBlockSize / 2) + (12 * Math.cos(toRadians(p2TankBarrel.rotation)));
+        //     animation.y = p2Tank.y + (landBlockSize / 2) + (12 * Math.sin(toRadians(p2TankBarrel.rotation)));
+        //     animation.scaleX = .5;
+        //     animation.scaleY = .5;
+        //     animation.gotoAndPlay("start");
+        //     stage.addChild(animation);
+        // }
         for (var i in activeMissiles) {
             stage.addChild(activeMissiles[i]);
             //stage.setChildIndex(activeMissiles[i], 0);
@@ -667,7 +783,7 @@ function handleKeyDown(e) {
     switch (e.keyCode) {
         case ARROW_KEY_UP:
             upKeyDown = true;
-            console.log("up arrow up");
+            //console.log("up arrow up");
             break;
         case ARROW_KEY_DOWN:
             downKeyDown = true;
@@ -708,109 +824,113 @@ function handleKeyUp(e) {
     }
 }
 
-function rotateBarrel(shape) {
+function rotateBarrel() {
+//function rotateBarrel(shape) {
     if (!waitingForMissiles) {
-        if ((p1RleftPressed || leftKeyDown) && (shape.rotation > -180)) {
-            shape.rotation = shape.rotation - 1;
+        if ((btnRotateLeftPressed || leftKeyDown) && (currentTank.getBarrelRotation() < 180)) {
+            currentTank.rotateBarrelLeft();
+
+
+            //shape.rotation = shape.rotation - 1;
         }
-        if ((p1RrightPressed || rightKeyDown) && (shape.rotation < 0)) {
-            shape.rotation = shape.rotation + 1;
+        if ((btnRotateRightPressed || rightKeyDown) && (currentTank.getBarrelRotation() > 0)) {
+            currentTank.rotateBarrelRight();
+
+
+            //shape.rotation = shape.rotation + 1;
         }
     }
 }
 
 function moveTankLeft() {
     if (!waitingForMissiles) {
-        if (p1turn && (p1MovesLeft > 0)) {
-            //// Add smoke animation
-            //animation.x = p1Tank.x + (landBlockSize / 2);
-            //animation.y = p1Tank.y + (landBlockSize / 2);
-            //animation.scaleX = .5;
-            //animation.scaleY = .5;
-            //animation.gotoAndPlay("start");
-            //stage.addChild(animation);
-
-            if (p1Tank.x > 0) {
-                p1XGrid--;
-                var pos = (blocks[p1XGrid].length);
-                p1Tank.x = landBlockSize * p1XGrid;
-                p1Tank.y = stageYdimens - (landBlockSize * pos);
-                p1MovesLeft--;
-            }
-        } else if (!p1turn && (p2MovesLeft > 0)) {
-            //// Add smoke animation
-            //animation.x = p2Tank.x + (landBlockSize / 2);
-            //animation.y = p2Tank.y + (landBlockSize / 2);
-            //animation.scaleX = .5;
-            //animation.scaleY = .5;
-            //animation.gotoAndPlay("start");
-            //stage.addChild(animation);
-
-            if (p2Tank.x > 0) {
-                p2XGrid--;
-                var pos = (blocks[p2XGrid].length);
-                p2Tank.x = landBlockSize * p2XGrid;
-                p2Tank.y = stageYdimens - (landBlockSize * pos);
-                p2MovesLeft--;
-            }
+        if (currentTank.getMovesLeft() > 0 && currentTank.x > 0) {
+            var xPosition = parseInt(currentTank.x / landBlockSize) - 1;
+            var yPosition = blocks[xPosition].length;
+            currentTank.x = landBlockSize * xPosition;
+            currentTank.y = stageYdimens - (landBlockSize * yPosition);
+            currentTank.useMove();
         }
+
+
+
+        // if (p1turn && (p1MovesLeft > 0)) {
+        //     if (p1Tank.x > 0) {
+        //         p1XGrid--;
+        //         var pos = (blocks[p1XGrid].length);
+        //         p1Tank.x = landBlockSize * p1XGrid;
+        //         p1Tank.y = stageYdimens - (landBlockSize * pos);
+        //         p1MovesLeft--;
+        //     }
+        // } else if (!p1turn && (p2MovesLeft > 0)) {
+        //     if (p2Tank.x > 0) {
+        //         p2XGrid--;
+        //         var pos = (blocks[p2XGrid].length);
+        //         p2Tank.x = landBlockSize * p2XGrid;
+        //         p2Tank.y = stageYdimens - (landBlockSize * pos);
+        //         p2MovesLeft--;
+        //     }
+        // }
     }
 }
 
 function moveTankRight() {
     if (!waitingForMissiles) {
-        if (p1turn && (p1MovesLeft > 0)) {
-            //// Add smoke animation
-            //animation.x = p1Tank.x + (landBlockSize / 2);
-            //animation.y = p1Tank.y + (landBlockSize / 2);
-            //animation.scaleX = .5;
-            //animation.scaleY = .5;
-            //animation.gotoAndPlay("start");
-            //stage.addChild(animation);
-
-            if (p1Tank.x < stageXdimens - landBlockSize) {
-                p1XGrid++;
-                var pos = (blocks[p1XGrid].length);
-                p1Tank.x = landBlockSize * p1XGrid;
-                p1Tank.y = stageYdimens - (landBlockSize * pos);
-                p1MovesLeft--;
-            }
-        } else if (!p1turn && (p2MovesLeft > 0)) {
-            //// Add smoke animation
-            //animation.x = p2Tank.x + (landBlockSize / 2);
-            //animation.y = p2Tank.y + (landBlockSize / 2);
-            //animation.scaleX = .5;
-            //animation.scaleY = .5;
-            //animation.gotoAndPlay("start");
-            //stage.addChild(animation);
-
-            if (p2Tank.x < stageXdimens - landBlockSize) {
-                p2XGrid++;
-                var pos = (blocks[p2XGrid].length);
-                p2Tank.x = landBlockSize * p2XGrid;
-                p2Tank.y = stageYdimens - (landBlockSize * pos);
-                p2MovesLeft--;
-            }
+        if (currentTank.getMovesLeft() > 0 && currentTank.x < stageXdimens - landBlockSize) {
+            var xPosition = parseInt(currentTank.x / landBlockSize) + 1;
+            var yPosition = blocks[xPosition].length;
+            currentTank.x = landBlockSize * xPosition;
+            currentTank.y = stageYdimens - (landBlockSize * yPosition);
+            currentTank.useMove();
         }
+
+
+
+        // if (p1turn && (p1MovesLeft > 0)) {
+        //     if (p1Tank.x < stageXdimens - landBlockSize) {
+        //         p1XGrid++;
+        //         var pos = (blocks[p1XGrid].length);
+        //         p1Tank.x = landBlockSize * p1XGrid;
+        //         p1Tank.y = stageYdimens - (landBlockSize * pos);
+        //         p1MovesLeft--;
+        //     }
+        // } else if (!p1turn && (p2MovesLeft > 0)) {
+        //     if (p2Tank.x < stageXdimens - landBlockSize) {
+        //         p2XGrid++;
+        //         var pos = (blocks[p2XGrid].length);
+        //         p2Tank.x = landBlockSize * p2XGrid;
+        //         p2Tank.y = stageYdimens - (landBlockSize * pos);
+        //         p2MovesLeft--;
+        //     }
+        // }
     }
 }
 
 function changePower() {
     if (!waitingForMissiles) {
-        if (p1turn) {
-            if ((pPowerUpPressed || upKeyDown) && p1Power < 100) {
-                p1Power++;
-            }
-            if ((pPowerDownPressed || downKeyDown) && p1Power > 20) {
-                p1Power--;
-            }
-        } else {
-            if ((pPowerUpPressed || upKeyDown) && p2Power < 100) {
-                p2Power++;
-            }
-            if ((pPowerDownPressed || downKeyDown) && p2Power > 20) {
-                p2Power--;
-            }
+        if ((btnIncreasePowerPressed || upKeyDown) && currentTank.getPowerLevel() < 100) {
+            currentTank.increasePowerLevel();
         }
+        if ((btnDecreasePowerPressed || downKeyDown) && currentTank.getPowerLevel() > 20) {
+            currentTank.decreasePowerLevel();
+        }
+
+
+
+        // if (p1turn) {
+        //     if ((btnIncreasePowerPressed || upKeyDown) && p1Power < 100) {
+        //         p1Power++;
+        //     }
+        //     if ((btnDecreasePowerPressed || downKeyDown) && p1Power > 20) {
+        //         p1Power--;
+        //     }
+        // } else {
+        //     if ((btnIncreasePowerPressed || upKeyDown) && p2Power < 100) {
+        //         p2Power++;
+        //     }
+        //     if ((btnDecreasePowerPressed || downKeyDown) && p2Power > 20) {
+        //         p2Power--;
+        //     }
+        // }
     }
 }
