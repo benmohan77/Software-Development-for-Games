@@ -14,7 +14,6 @@ var smokeSheetIMG = "smokeSheet";
 var smokeSheet;
 var animation;
 
-
 // Landscape Generation Vars
 var stageXdimens;
 var stageYdimens;
@@ -26,12 +25,6 @@ var landBlockSize;
 var maxLandDev;
 
 // Player Tank Vars
-var p1Tank;
-var p1TankBitmap;
-var p1TankBarrel;
-var p2Tank;
-var p2TankBitmap;
-var p2TankBarrel;
 var playerTanks = [];
 var currentTank;
 var currentTankIndex;
@@ -52,8 +45,6 @@ var btnDecreasePower;
 var btnMoveRight;
 var btnMoveLeft;
 var btnFire;
-var p1MovesLeft = maxMoves;
-var p2MovesLeft = maxMoves;
 
 //Key variables
 const ARROW_KEY_LEFT = 37;
@@ -69,25 +60,12 @@ var spaceKeyDown = false;
 
 var g;
 
-//Player Turn
-var p1turn;
-var RED_TURN = "Red";
-var GREEN_TURN = "Green"
-var p1Power = 50;
-var p2Power = 50;
-
-
 //Data displays
 var lblBarrelRotation;
 var lblNowPlaying;
 var lblHealth;
 var lblMovesLeft;
 var lblPowerLevel;
-
-//Tank x Index On GRID
-var p1XGrid;
-var p2XGrid;
-
 
 
 
@@ -138,11 +116,11 @@ function init() {
     lblBarrelRotation.y = 12;
     stage.addChild(lblBarrelRotation);
 
-    lblNowPlaying = new createjs.Text("Player: " + "", "20px Arial", "#000000");
+    lblNowPlaying = new createjs.Text("Player:", "20px Arial", "#000000");
     lblNowPlaying.x = 500;
     lblNowPlaying.y = 10;
 
-    lblHealth = new createjs.Text("Health: " + "0" + "/100", "15px Arial", "#000000");
+    lblHealth = new createjs.Text("=== Health ===", "15px Arial", "#000000");
     lblHealth.x = 500;
     lblHealth.y = 35;
     stage.addChild(lblNowPlaying, lblHealth);
@@ -187,22 +165,6 @@ function tick(event) {
         createjs.Sound.play(ripSound);
         createjs.Sound.mute = true;
     }
-    // Check if either tank is dead
-    // if (p1Tank.health <= 0 || p2Tank.health <= 0) {
-    //     createjs.Ticker.removeAllEventListeners();
-    //     var gameover = new createjs.Text("Game Over", "30px Arial", "#000000");
-    //     gameover.x = (stageXdimens / 2) - 75;// 245; // 75px off center
-    //     gameover.y = (stageYdimens / 2) - 15;// 225; // 15px off center
-    //     stage.addChild(gameover);
-    //     if (p1Tank.health <= 0) {
-    //         p1Tank.removeAllChildren();
-    //     } else {
-    //         p2Tank.removeAllChildren();
-    //     }
-    //     stage.update();
-    //     createjs.Sound.play(ripSound);
-    //     createjs.Sound.mute = true;
-    // }
 
     // Remove the smoke animation once it is complete
     if (animation.currentFrame > 14) {
@@ -211,11 +173,6 @@ function tick(event) {
 
     // Rotate barrels
     rotateBarrel();
-    // if (p1turn) {
-    //     rotateBarrel(p1TankBarrel);
-    // } else {
-    //     rotateBarrel(p2TankBarrel);
-    // }
 
     // Update player labels
     playerLabel();
@@ -247,8 +204,6 @@ function tick(event) {
             // Remove the missiles from the stage and activeMissiles only when all are ready to be removed
             if (elemsToRemove.length === activeMissiles.length) {
                 //console.log("Removing all missiles...");
-                //for (var i in activeMissiles)
-                //    stage.removeChild(activeMissiles[i]);
                 activeMissiles = [];
                 //console.log("Number of active missiles: " + activeMissiles.length);
             }
@@ -276,7 +231,6 @@ function createMissile(explosionRadius, startingAngle, velocity, damageAmount, s
     tempMissile.y = startingY;
     tempMissile.startingX = startingX;
     tempMissile.startingY = startingY;
-    //console.log(startingY);
 
     tempMissile.time = 0;
     tempMissile.hasImpacted = false;
@@ -317,18 +271,6 @@ function createMissile(explosionRadius, startingAngle, velocity, damageAmount, s
                     }
                 }
 
-
-                // p1dist = Math.sqrt(Math.pow(this.x - (p1Tank.x + (landBlockSize / 2)), 2) + Math.pow(this.y - (p1Tank.y + (landBlockSize / 2)), 2));
-                // if (p1dist <= this.explosionRadius) {
-                //     p1Tank.health -= parseInt((1 - (p1dist / this.explosionRadius)) * this.damageAmount);
-                // }
-                // p2dist = Math.sqrt(Math.pow(this.x - (p2Tank.x + (landBlockSize / 2)), 2) + Math.pow(this.y - (p2Tank.y + (landBlockSize / 2)), 2));
-                // if (p2dist <= this.explosionRadius) {
-                //     p2Tank.health -= parseInt((1 - (p2dist / this.explosionRadius)) * this.damageAmount);
-                // }
-                // console.log("p1 health: " + p1Tank.health);
-                // console.log("p2 health: " + p2Tank.health);
-
                 // Attempt block destruction
                 var blocksToDelete = [];
                 for (var x in blocks) {
@@ -342,8 +284,6 @@ function createMissile(explosionRadius, startingAngle, velocity, damageAmount, s
                                 blocks[x][i].initialY = i;
                                 blocksToDelete.push(blocks[x][i]);
                                 //console.log("marking: " + x + ", " + i);
-                                //blocks[x].splice(y, 1);
-                                //blocks[x][y] = null;
                             }
                             break;
                         }
@@ -366,7 +306,6 @@ function createMissile(explosionRadius, startingAngle, velocity, damageAmount, s
                 blocksToDelete = null;
                 // Move tanks to correct heights
                 positionTanksHeight();
-                //positionTanks(parseInt(p1Tank.x / landBlockSize), parseInt(p2Tank.x / landBlockSize));
                 stage.update();
 
                 this.hasImpacted = true;
@@ -379,8 +318,6 @@ function createMissile(explosionRadius, startingAngle, velocity, damageAmount, s
                 x: this.x + this.velocityX,
                 y: veloc(this.time, this.velocityY, this.startingY)
             }, (updateDelay / ticksPerSec) * 1000);
-            // this.x += this.velocityX;
-            // this.y = veloc(this.time, this.velocityY, this.startingY);
             //console.log("Y Pos: " + this.y);
         }
     }
@@ -435,52 +372,10 @@ function addTanks() {
 
     currentTankIndex = 0;
     currentTank = playerTanks[currentTankIndex];
-
-
-
-    // // Get our images
-    // p1TankPNG = new createjs.Bitmap(queue.getResult("p1TankPNG"));
-    // p1TankBarrel = new createjs.Bitmap(queue.getResult("p1TankBarrel"));
-    // p2TankPNG = new createjs.Bitmap(queue.getResult("p2TankPNG"));
-    // p2TankBarrel = new createjs.Bitmap(queue.getResult("p2TankBarrel"));
-
-    // p1TankBarrel.regX = 0;
-    // p1TankBarrel.regY = 2.5;
-
-    // p2TankBarrel.regX = 0;
-    // p2TankBarrel.regY = 2.5;
-
-    // p1TankBarrel.x = 10;
-    // p1TankBarrel.y = 10;
-
-    // p2TankBarrel.y = 10;
-    // p2TankBarrel.x = 10;
-    // p2TankBarrel.rotation = -180;
-
-
-
-    // p1Tank = new createjs.Container();
-    // p1Tank.addChild(p1TankBarrel);
-    // p1Tank.addChild(p1TankPNG);
-    // p1Tank.health = 100;
-
-    // p2Tank = new createjs.Container();
-    // p2Tank.addChild(p2TankBarrel);
-    // p2Tank.addChild(p2TankPNG);
-    // p2Tank.health = 100;
-
-    // // Find the starting positions for the tanks
-    // p1XGrid = 4;
-    // p2XGrid = stageXblocks - 5;
-    // positionTanks(p1XGrid, p2XGrid);
-
-    // stage.addChild(p1Tank);
-    // stage.addChild(p2Tank);
 }
 
 // Used for initializing the positions of the tanks
 function positionTanks() {
-//function positionTanks(p1tankXpos, p2tankXpos) {
     var divisionSize = stageXblocks / (playerTanks.length);
     for (var i in playerTanks) {
         var xPosition = (i * divisionSize) + (divisionSize / 2);
@@ -488,25 +383,6 @@ function positionTanks() {
         playerTanks[i].x = xPosition * landBlockSize;
         playerTanks[i].y = stageYdimens - (blocks[xPosition].length * landBlockSize);
     }
-
-
-
-    // var p1pos = (blocks[p1tankXpos].length); // 0;
-    // var p2pos = (blocks[p2tankXpos].length); // 0;
-
-    // // Set the starting positions for the tanks
-    // p1Tank.x = landBlockSize * p1tankXpos;
-    // p1Tank.y = stageYdimens - (landBlockSize * p1pos);
-    // p2Tank.x = p2tankXpos * landBlockSize;
-    // p2Tank.y = stageYdimens - (landBlockSize * p2pos);
-
-    // // Kill the tanks if they are out of bounds
-    // if (p1Tank.y >= stageYdimens) {
-    //     p1Tank.health = 0;
-    // }
-    // if (p2Tank.y >= stageYdimens) {
-    //     p2Tank.health = 0;
-    // }
 }
 
 // Used for repositioning the height of the tanks on the screen (perhaps after block desctruction)
@@ -528,26 +404,10 @@ function playerLabel() {
             addStr = "0";
         str += "\n" + addStr + playerTanks[i].getHealth() + " | " + playerTanks[i].name;
     }
-    lblHealth.text = str;// "Health: " + currentTank.getHealth(); + "/100";
+    lblHealth.text = str;
     lblBarrelRotation.text = currentTank.getBarrelRotation();
     lblMovesLeft.text = currentTank.getMovesLeft();
     lblPowerLevel.text = currentTank.getPowerLevel();
-
-
-
-    // if (p1turn) {
-    //     lblNowPlaying.text = "Player: " + RED_TURN;
-    //     lblHealth.text = "Health: " + p1Tank.health + "/100";
-    //     lblBarrelRotation.text = -(p1TankBarrel.rotation);
-    //     lblMovesLeft.text = p1MovesLeft;
-    //     lblPowerLevel.text = p1Power;
-    // } else {
-    //     lblNowPlaying.text = "Player: " + GREEN_TURN;
-    //     lblHealth.text = "Health: " + p2Tank.health + "/100";
-    //     lblBarrelRotation.text = -(p2TankBarrel.rotation);
-    //     lblMovesLeft.text = p2MovesLeft;
-    //     lblPowerLevel.text = p2Power;
-    // }
 }
 
 //initializes the buttons for controlling the tanks
@@ -743,36 +603,8 @@ function shoot() {
         currentTank = playerTanks[currentTankIndex];
         } while (currentTank.isDead());
 
-
-
-        // if (p1turn) {
-        //     activeMissiles.push(createMissile(40, -p1TankBarrel.rotation, p1Power / 7, 60, p1Tank.x + (landBlockSize / 2), p1Tank.y + (landBlockSize / 2)));
-        //     p1turn = false;
-        //     p1MovesLeft = maxMoves;
-
-        //     // Add smoke animation
-        //     animation.x = p1Tank.x + (landBlockSize / 2) + (12 * Math.cos(toRadians(p1TankBarrel.rotation)));
-        //     animation.y = p1Tank.y + (landBlockSize / 2) + (12 * Math.sin(toRadians(p1TankBarrel.rotation)));
-        //     animation.scaleX = .5;
-        //     animation.scaleY = .5;
-        //     animation.gotoAndPlay("start");
-        //     stage.addChild(animation);
-        // } else {
-        //     activeMissiles.push(createMissile(40, -p2TankBarrel.rotation, p2Power / 7, 60, p2Tank.x + (landBlockSize / 2), p2Tank.y + (landBlockSize / 2)));
-        //     p1turn = true;
-        //     p2MovesLeft = maxMoves;
-
-        //     // Add smoke animation
-        //     animation.x = p2Tank.x + (landBlockSize / 2) + (12 * Math.cos(toRadians(p2TankBarrel.rotation)));
-        //     animation.y = p2Tank.y + (landBlockSize / 2) + (12 * Math.sin(toRadians(p2TankBarrel.rotation)));
-        //     animation.scaleX = .5;
-        //     animation.scaleY = .5;
-        //     animation.gotoAndPlay("start");
-        //     stage.addChild(animation);
-        // }
         for (var i in activeMissiles) {
             stage.addChild(activeMissiles[i]);
-            //stage.setChildIndex(activeMissiles[i], 0);
         }
 
         createjs.Sound.play(gunSound); // play using id.  Could also use full source path or event.src.
@@ -825,19 +657,12 @@ function handleKeyUp(e) {
 }
 
 function rotateBarrel() {
-//function rotateBarrel(shape) {
     if (!waitingForMissiles) {
         if ((btnRotateLeftPressed || leftKeyDown) && (currentTank.getBarrelRotation() < 180)) {
             currentTank.rotateBarrelLeft();
-
-
-            //shape.rotation = shape.rotation - 1;
         }
         if ((btnRotateRightPressed || rightKeyDown) && (currentTank.getBarrelRotation() > 0)) {
             currentTank.rotateBarrelRight();
-
-
-            //shape.rotation = shape.rotation + 1;
         }
     }
 }
@@ -851,26 +676,6 @@ function moveTankLeft() {
             currentTank.y = stageYdimens - (landBlockSize * yPosition);
             currentTank.useMove();
         }
-
-
-
-        // if (p1turn && (p1MovesLeft > 0)) {
-        //     if (p1Tank.x > 0) {
-        //         p1XGrid--;
-        //         var pos = (blocks[p1XGrid].length);
-        //         p1Tank.x = landBlockSize * p1XGrid;
-        //         p1Tank.y = stageYdimens - (landBlockSize * pos);
-        //         p1MovesLeft--;
-        //     }
-        // } else if (!p1turn && (p2MovesLeft > 0)) {
-        //     if (p2Tank.x > 0) {
-        //         p2XGrid--;
-        //         var pos = (blocks[p2XGrid].length);
-        //         p2Tank.x = landBlockSize * p2XGrid;
-        //         p2Tank.y = stageYdimens - (landBlockSize * pos);
-        //         p2MovesLeft--;
-        //     }
-        // }
     }
 }
 
@@ -883,26 +688,6 @@ function moveTankRight() {
             currentTank.y = stageYdimens - (landBlockSize * yPosition);
             currentTank.useMove();
         }
-
-
-
-        // if (p1turn && (p1MovesLeft > 0)) {
-        //     if (p1Tank.x < stageXdimens - landBlockSize) {
-        //         p1XGrid++;
-        //         var pos = (blocks[p1XGrid].length);
-        //         p1Tank.x = landBlockSize * p1XGrid;
-        //         p1Tank.y = stageYdimens - (landBlockSize * pos);
-        //         p1MovesLeft--;
-        //     }
-        // } else if (!p1turn && (p2MovesLeft > 0)) {
-        //     if (p2Tank.x < stageXdimens - landBlockSize) {
-        //         p2XGrid++;
-        //         var pos = (blocks[p2XGrid].length);
-        //         p2Tank.x = landBlockSize * p2XGrid;
-        //         p2Tank.y = stageYdimens - (landBlockSize * pos);
-        //         p2MovesLeft--;
-        //     }
-        // }
     }
 }
 
@@ -914,23 +699,5 @@ function changePower() {
         if ((btnDecreasePowerPressed || downKeyDown) && currentTank.getPowerLevel() > 20) {
             currentTank.decreasePowerLevel();
         }
-
-
-
-        // if (p1turn) {
-        //     if ((btnIncreasePowerPressed || upKeyDown) && p1Power < 100) {
-        //         p1Power++;
-        //     }
-        //     if ((btnDecreasePowerPressed || downKeyDown) && p1Power > 20) {
-        //         p1Power--;
-        //     }
-        // } else {
-        //     if ((btnIncreasePowerPressed || upKeyDown) && p2Power < 100) {
-        //         p2Power++;
-        //     }
-        //     if ((btnDecreasePowerPressed || downKeyDown) && p2Power > 20) {
-        //         p2Power--;
-        //     }
-        // }
     }
 }
