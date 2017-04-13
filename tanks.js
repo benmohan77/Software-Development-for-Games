@@ -206,6 +206,14 @@ function tick(event) {
                 //console.log("Removing all missiles...");
                 activeMissiles = [];
                 //console.log("Number of active missiles: " + activeMissiles.length);
+
+                // Change turns
+                currentTank.hideMarker();
+                do {
+                currentTankIndex = (currentTankIndex + 1) % playerTanks.length;
+                currentTank = playerTanks[currentTankIndex];
+                } while (currentTank.isDead());
+                currentTank.showMarker();
             }
 
             waitingForMissiles = (activeMissiles.length > 0);
@@ -361,6 +369,9 @@ function addTanks() {
     playerTanks.push(new Tank("Second Player", 90, "p2TankPNG", "p2TankBarrel"));
     playerTanks.push(new Tank("Third Player", 90, "p1TankPNG", "p1TankBarrel"));
     playerTanks.push(new Tank("Fourth Player", 180, "p2TankPNG", "p2TankBarrel"));
+
+    // Show the marker on the first player in the game
+    playerTanks[0].showMarker();
 
     // Position each tank on the field
     positionTanks();
@@ -596,12 +607,6 @@ function shoot() {
         animation.scaleY = .5;
         animation.gotoAndPlay("start");
         stage.addChild(animation);
-
-        // Change turns
-        do {
-        currentTankIndex = (currentTankIndex + 1) % playerTanks.length;
-        currentTank = playerTanks[currentTankIndex];
-        } while (currentTank.isDead());
 
         for (var i in activeMissiles) {
             stage.addChild(activeMissiles[i]);

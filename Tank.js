@@ -13,9 +13,19 @@
 	    tank.barrel.y = 10;
 	    tank.barrel.rotation = -barrelRotation;
 
-	    // Add tank bitmap and barrel to the tank container
+	    tank.marker = new createjs.Shape();
+		tank.marker.graphics.beginFill("#6F6").setStrokeStyle(2)
+			.beginStroke("#26F").drawPolyStar(0, 0, 8, 3, 0.5, 90);
+		tank.marker.alpha = 0;
+		tank.marker.x = 10;
+		tank.marker.y = -25;
+		tank.marker.moveAnimation = createjs.Tween.get(tank.marker, {paused: true, loop: true})
+			.to({y:-35}, 750).to({y:-25}, 750);
+
+	    // Add tank bitmap, barrel bitmap, and the marker shape to the tank container
 	    tank.addChild(tank.bitmap);
 	    tank.addChild(tank.barrel);
+	    tank.addChild(tank.marker);
 
 	    // Set common properties of the tank
 		tank.name = playerName;
@@ -37,6 +47,8 @@
 	    tank.getPowerLevel = getPowerLevel;
 	    tank.decreasePowerLevel = decreasePowerLevel;
 	    tank.increasePowerLevel = increasePowerLevel;
+	    tank.showMarker = showMarker;
+	    tank.hideMarker = hideMarker;
 
 	    return tank;
 	}
@@ -93,6 +105,16 @@
 	}
 	function increasePowerLevel() {
 		this.powerLevel++;
+	}
+
+	/* FUNCTIONS RELATING TO THE MARKER ABOVE THE TANK */
+	function showMarker() {
+		this.marker.moveAnimation.setPaused(false);
+		this.marker.alpha = 1;
+	}
+	function hideMarker() {
+		this.marker.moveAnimation.setPaused(true);
+		this.marker.alpha = 0;
 	}
 
 	window.Tank = Tank;
