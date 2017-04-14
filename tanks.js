@@ -52,6 +52,9 @@ const ARROW_KEY_UP = 38;
 const ARROW_KEY_RIGHT = 39;
 const ARROW_KEY_DOWN = 40;
 const SPACE_KEY = 32;
+const A_KEY = 65;
+const D_KEY = 68;
+var isMoving = false;
 var upKeyDown = false;
 var downKeyDown = false;
 var leftKeyDown = false;
@@ -634,6 +637,18 @@ function handleKeyDown(e) {
         case SPACE_KEY:
             spaceKeyDown = true;
             break;
+        case A_KEY:
+        	if (!isMoving) {
+        		isMoving = true;
+        		moveTankLeft();
+        	}
+        	break;
+        case D_KEY:
+        	if (!isMoving) {
+        		isMoving = true;
+        		moveTankRight();
+        	}
+        	break;
         default:
             break;
     }
@@ -656,6 +671,12 @@ function handleKeyUp(e) {
         case SPACE_KEY:
             spaceKeyDown = false;
             break;
+        case A_KEY:
+        	isMoving = false;
+        	break;
+        case D_KEY:
+        	isMoving = false;
+        	break;
         default:
             break;
     }
