@@ -2,7 +2,7 @@ var queue; // LoadQueue
 var stage; // Stage
 var blocks; // Our landscape in a 2D array
 var ticksPerSec = 60;
-var updateDelay = 2; //ticksPerSec / 30;
+var updateDelay = 1; //ticksPerSec / 30;
 var currentUpdateCount = 0;
 
 //Constants
@@ -154,8 +154,8 @@ function tick(event) {
     if (deathCount >= playerTanks.length - 1) {
         createjs.Ticker.removeAllEventListeners();
         var gameover = new createjs.Text("Game Over", "30px Arial", "#000000");
-        gameover.x = (stageXdimens / 2) - 75;// 245; // 75px off center
-        gameover.y = (stageYdimens / 2) - 15;// 225; // 15px off center
+        gameover.x = (stageXdimens / 2) - 75; // 245; // 75px off center
+        gameover.y = (stageYdimens / 2) - 15; // 225; // 15px off center
         stage.addChild(gameover);
         // Remove the dead players from the stage
         // This will need to be moved so each dead player doesn't remain on screen until there is a winner
@@ -213,8 +213,8 @@ function tick(event) {
                 // Change turns
                 currentTank.hideMarker();
                 do {
-                currentTankIndex = (currentTankIndex + 1) % playerTanks.length;
-                currentTank = playerTanks[currentTankIndex];
+                    currentTankIndex = (currentTankIndex + 1) % playerTanks.length;
+                    currentTank = playerTanks[currentTankIndex];
                 } while (currentTank.isDead());
                 currentTank.showMarker();
             }
@@ -228,143 +228,6 @@ function tick(event) {
     stage.update();
 }
 
-function toRadians(angle) {
-    return angle * (Math.PI / 180);
-}
-
-function createMissile(explosionRadius, startingAngle, velocity, damageAmount, startingX, startingY) {
-    var graph = new createjs.Graphics();
-    graph.beginStroke("#CCC").beginFill("#333");
-    graph.drawCircle(0, 0, 3);
-    var tempMissile = new createjs.Shape(graph);
-    tempMissile.radius = 3.0;
-    tempMissile.x = startingX;
-    tempMissile.y = startingY;
-    tempMissile.startingX = startingX;
-    tempMissile.startingY = startingY;
-
-    tempMissile.time = 0;
-    tempMissile.hasImpacted = false;
-    tempMissile.isExploding = false;
-
-    tempMissile.explosionRadius = explosionRadius;
-    tempMissile.startingAngle = startingAngle;
-    tempMissile.velocityX = velocity * Math.cos(toRadians(startingAngle));
-    tempMissile.velocityY = -velocity * Math.sin(toRadians(startingAngle));
-    tempMissile.damageAmount = damageAmount;
-
-    tempMissile.moveToNextPos = function () {
-        // Check if missile has impacted with anything
-        var xBlockPos = Math.floor(this.x / landBlockSize);
-        //console.log("-----------------------------------------------------------------------------------------");
-        //console.log("this.y: " + this.y);
-        //console.log("xBlockPos: " + xBlockPos);
-        //console.log("blocks[xBlockPos].length: " + blocks[xBlockPos].length);
-        //console.log("blocks[xBlockPos].length * landBlockSize: " + (blocks[xBlockPos].length * landBlockSize));
-        //console.log("stageYdimens - (blocks[xBlockPos].length * landBlockSize): " + (landBlockSize + stageYdimens - (blocks[xBlockPos].length * landBlockSize)));
-        if (!this.isExploding && xBlockPos >= 0 && xBlockPos < blocks.length && this.y >= (landBlockSize + stageYdimens - (blocks[xBlockPos].length * landBlockSize))) {
-            // The missile has now impacted
-            //this.hasImpacted = true;
-            console.log("has impacted");
-
-            this.isExploding = true;
-            createjs.Sound.play(boomSound);
-
-            createjs.Tween.get(this).to({ scaleX: this.explosionRadius / this.radius, scaleY: this.explosionRadius / this.radius, alpha: 0 }, 750, createjs.Ease.quintOut()).call(function () {
-                console.log("Hello.");
-                stage.removeChild(this);
-
-                // Remove health from tanks if they're close enough
-                for (var i in playerTanks) {
-                    tankDistance = Math.sqrt(Math.pow(this.x - (playerTanks[i].x + (landBlockSize / 2)), 2) + Math.pow(this.y - (playerTanks[i].y + (landBlockSize / 2)), 2));
-                    if (tankDistance <= this.explosionRadius) {
-                        playerTanks[i].damageTank(parseInt((1 - (tankDistance / this.explosionRadius)) * this.damageAmount));
-                    }
-                }
-
-                // Attempt block destruction
-                var blocksToDelete = [];
-                for (var x in blocks) {
-                    for (var y in blocks[x]) {
-                        //console.log("hi: " + x + ", " + y);
-                        var blockDist = Math.sqrt(Math.pow(blocks[x][y].x + (landBlockSize / 2) - this.x, 2) + Math.pow(blocks[x][y].y + (landBlockSize / 2) - this.y, 2));
-                        if (blockDist <= this.explosionRadius * 0.75) {
-                            // Remove all blocks from here up
-                            for (var i = y; i < blocks[x].length; i++) {
-                                blocks[x][i].initialX = x;
-                                blocks[x][i].initialY = i;
-                                blocksToDelete.push(blocks[x][i]);
-                                //console.log("marking: " + x + ", " + i);
-                            }
-                            break;
-                        }
-                    }
-                }
-                // Actually delete blocks
-                var currentX = -1;
-                var yOffset = 0;
-                for (var x in blocksToDelete) {
-                    var block = blocksToDelete[x];
-                    if (block.initialX !== currentX) {
-                        currentX = block.initialX;
-                        yOffset = 0;
-                    }
-                    stage.removeChild(block);
-                    blocks[block.initialX].splice(block.initialY - yOffset, 1);
-                    //console.log("deleting: " + block.initialX + ", " + block.initialY);
-                    yOffset++;
-                }
-                blocksToDelete = null;
-                // Move tanks to correct heights
-                positionTanksHeight();
-                stage.update();
-
-                this.hasImpacted = true;
-            });
-        }
-
-        if (!this.hasImpacted && !this.isExploding) {
-            this.time += 1;
-            createjs.Tween.get(this).to({
-                x: this.x + this.velocityX,
-                y: veloc(this.time, this.velocityY, this.startingY)
-            }, (updateDelay / ticksPerSec) * 1000);
-            //console.log("Y Pos: " + this.y);
-        }
-    }
-
-    tempMissile.checkOutOfBounds = function () {
-        //console.log(this.startingAngle + ": " + parseInt(this.x + this.radius));
-        if (parseInt(this.x + this.radius) < 0)
-            return true;
-        //console.log(this.startingAngle + ": " + parseInt(this.x - this.radius));
-        if (parseInt(this.x - this.radius) > stageXdimens)
-            return true;
-        //console.log(this.startingAngle + ": " + parseInt(this.y + this.radius));
-        // We don't need to check top height. What goes up must come down.
-        //if (parseInt(this.y + this.radius) < 0)
-        //    return true;
-        //console.log(this.startingAngle + ": " + parseInt(this.y - this.radius));
-        if (parseInt(this.y - this.radius) > stageYdimens)
-            return true;
-        return false;
-    }
-
-    tempMissile.hasExploded = function () {
-        return this.hasImpacted;
-    }
-
-    return tempMissile;
-}
-
-function veloc(time, Vo, X) {
-    // -(1/2)at^2 + Vot + x
-    var a = 0.2;
-    var result = ((1 / 2) * a * (time * time)) + (Vo * time) + X;
-    //console.log("Equat: -1/2 * " + a + " * " + time + "^2 + " + Vo + " * " + time + " + " + X);
-    //console.log("Resul: " + result);
-    return result;
-}
 
 function addTanks() {
     // Add our tanks
@@ -433,11 +296,11 @@ function initButtons() {
     btnRotateRight.graphics.beginStroke("#000000").beginFill("#000000").drawPolyStar(15, 15, 15, 3, .5, 0);
 
 
-    btnRotateRight.on("mousedown", function () {
+    btnRotateRight.on("mousedown", function() {
         btnRotateRightPressed = true;
     })
 
-    btnRotateRight.on("pressup", function () {
+    btnRotateRight.on("pressup", function() {
         btnRotateRightPressed = false;
     });
 
@@ -446,10 +309,10 @@ function initButtons() {
     btnRotateLeft.graphics.beginStroke("#000000").beginFill("#000000").drawPolyStar(15, 15, 15, 3, .5, 180);
 
 
-    btnRotateLeft.on("mousedown", function () {
+    btnRotateLeft.on("mousedown", function() {
         btnRotateLeftPressed = true;
     });
-    btnRotateLeft.on("pressup", function () {
+    btnRotateLeft.on("pressup", function() {
         btnRotateLeftPressed = false;
     });
 
@@ -483,20 +346,20 @@ function initButtons() {
     //Power down button;
     btnDecreasePower = new createjs.Shape();
     btnDecreasePower.graphics.beginStroke("#000000").beginFill("#000000").drawPolyStar(15, 15, 15, 3, .5, 180);
-    btnDecreasePower.on("mousedown", function () {
+    btnDecreasePower.on("mousedown", function() {
         btnDecreasePowerPressed = true;
     });
-    btnDecreasePower.on("pressup", function () {
+    btnDecreasePower.on("pressup", function() {
         btnDecreasePowerPressed = false;
     });
 
     //Power Up Button
     btnIncreasePower = new createjs.Shape();
     btnIncreasePower.graphics.beginStroke("#000000").beginFill("#000000").drawPolyStar(15, 15, 15, 3, .5, 0);
-    btnIncreasePower.on("mousedown", function () {
+    btnIncreasePower.on("mousedown", function() {
         btnIncreasePowerPressed = true;
     });
-    btnIncreasePower.on("pressup", function () {
+    btnIncreasePower.on("pressup", function() {
         btnIncreasePowerPressed = false;
     });
     btnIncreasePower.x = 270;
@@ -599,8 +462,7 @@ function get2DArray(size) {
 
 function shoot() {
     if (!waitingForMissiles) {
-        activeMissiles.push(createMissile(40, currentTank.getBarrelRotation(), currentTank.getPowerLevel() / 7, 60, currentTank.x + (landBlockSize / 2), currentTank.y + (landBlockSize / 2)));
-
+        currentTank.fireMissile();
         currentTank.setMovesLeft(maxMoves);
 
         // Add smoke animation
@@ -638,17 +500,17 @@ function handleKeyDown(e) {
             spaceKeyDown = true;
             break;
         case A_KEY:
-        	if (!isMoving) {
-        		isMoving = true;
-        		moveTankLeft();
-        	}
-        	break;
+            if (!isMoving) {
+                isMoving = true;
+                moveTankLeft();
+            }
+            break;
         case D_KEY:
-        	if (!isMoving) {
-        		isMoving = true;
-        		moveTankRight();
-        	}
-        	break;
+            if (!isMoving) {
+                isMoving = true;
+                moveTankRight();
+            }
+            break;
         default:
             break;
     }
@@ -672,11 +534,11 @@ function handleKeyUp(e) {
             spaceKeyDown = false;
             break;
         case A_KEY:
-        	isMoving = false;
-        	break;
+            isMoving = false;
+            break;
         case D_KEY:
-        	isMoving = false;
-        	break;
+            isMoving = false;
+            break;
         default:
             break;
     }
