@@ -474,7 +474,7 @@ function shoot() {
         stage.addChild(animation);
 
         for (var i in activeMissiles) {
-            stage.addChild(activeMissiles[i]);
+            stage.addChild(activeMissiles[i], 0);
         }
 
         createjs.Sound.play(gunSound); // play using id.  Could also use full source path or event.src.

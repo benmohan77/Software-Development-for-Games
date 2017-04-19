@@ -75,7 +75,7 @@
     }
 
     function fireMissile() {
-        activeMissiles.push(new Missile("fast", this.getBarrelRotation(), this.getPowerLevel() / 7, this.x + (landBlockSize / 2), this.y + (landBlockSize / 2)));
+        activeMissiles.push(new Missile("big", this.getBarrelRotation(), this.getPowerLevel() / 7, this.x + (landBlockSize / 2), this.y + (landBlockSize / 2)));
     }
 
     /* FUNCTIONS RELATING TO BARREL ROTATION */

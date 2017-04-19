@@ -1,19 +1,7 @@
 (function() {
 
     var Missile = function(missileType, startingAngle, velocity, startingX, startingY) {
-        switch (missileType) {
-            case "fast":
-                tempMissile.explosionRadius = 20;
-                tempMissile.velocityX = velocity * Math.cos(toRadians(startingAngle)) * 2;
-                tempMissile.velocityY = -velocity * Math.sin(toRadians(startingAngle)) * 2;
-                tempMissile.damageAmount = 60;
-                break;
-            default:
-                tempMissile.velocityX = velocity * Math.cos(toRadians(startingAngle));
-                tempMissile.velocityY = -velocity * Math.sin(toRadians(startingAngle));
-                tempMissile.explosionRadius = 40;
-                tempMissile.damageAmount = 60;
-        }
+
 
 
 
@@ -34,6 +22,28 @@
 
         tempMissile.startingAngle = startingAngle;
 
+
+        switch (missileType) {
+            case "fast":
+                tempMissile.explosionRadius = 20;
+                tempMissile.velocityX = velocity * Math.cos(toRadians(startingAngle)) * 2;
+                tempMissile.velocityY = -velocity * Math.sin(toRadians(startingAngle)) * 2;
+                tempMissile.damageAmount = 60;
+                break;
+            case "big":
+                console.log("big");
+                tempMissile.explosionRadius = 100;
+                tempMissile.velocityX = (velocity / 2) * Math.cos(toRadians(startingAngle));
+                tempMissile.velocityY = (-velocity / 2) * Math.sin(toRadians(startingAngle));
+                tempMissile.damageAmount = 60;
+                break;
+            default:
+                tempMissile.velocityX = velocity * Math.cos(toRadians(startingAngle));
+                tempMissile.velocityY = -velocity * Math.sin(toRadians(startingAngle));
+                tempMissile.explosionRadius = 40;
+                tempMissile.damageAmount = 60;
+                break;
+        }
 
         tempMissile.moveToNextPos = function() {
             // Check if missile has impacted with anything
