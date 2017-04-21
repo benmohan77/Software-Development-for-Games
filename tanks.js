@@ -1,5 +1,3 @@
-var queue; // LoadQueue
-var stage; // Stage
 var blocks; // Our landscape in a 2D array
 var ticksPerSec = 60;
 var updateDelay = 1; //ticksPerSec / 30;
@@ -60,8 +58,7 @@ var downKeyDown = false;
 var leftKeyDown = false;
 var rightKeyDown = false;
 var spaceKeyDown = false;
-
-var g;
+//main graphics
 
 //Data displays
 var lblBarrelRotation;
@@ -72,26 +69,13 @@ var lblPowerLevel;
 
 
 
-function load() {
-    queue = new createjs.LoadQueue(false);
-    queue.on("complete", init, this);
-    queue.installPlugin(createjs.Sound);
-    queue.loadManifest([
-        { id: "p1TankPNG", src: "red_tank.png" },
-        { id: "p1TankBarrel", src: "red_tank_barrel.png" },
-        { id: "p2TankPNG", src: "green_tank.png" },
-        { id: "p2TankBarrel", src: "green_tank_barrel.png" },
-        { id: "smokeSheet", src: "smoke.png" },
-    ]);
-}
 
-function init() {
-    stage = new createjs.Stage("canvas");
-    g = new createjs.Graphics();
+
+function newGame(players) {
     createjs.Sound.registerSound("gun.wav", gunSound);
     initButtons();
     landGeneration();
-    addTanks();
+    addTanks(players);
 
     smokeSheetIMG = queue.getResult("smokeSheet");
 
@@ -137,12 +121,12 @@ function init() {
     p1turn = true;
 
     stage.update();
-    createjs.Ticker.setFPS(ticksPerSec);
-    createjs.Ticker.addEventListener("tick", tick);
+
 }
 
 
 function tick(event) {
+
     // Check to see if either all tanks are dead or all but one tank is dead
     var deathCount = 0;
     for (var i in playerTanks) {
@@ -229,12 +213,16 @@ function tick(event) {
 }
 
 
-function addTanks() {
+function addTanks(playerCount) {
     // Add our tanks
-    playerTanks.push(new Tank("First Player", 0, "p1TankPNG", "p1TankBarrel"));
-    playerTanks.push(new Tank("Second Player", 90, "p2TankPNG", "p2TankBarrel"));
-    playerTanks.push(new Tank("Third Player", 90, "p1TankPNG", "p1TankBarrel"));
-    playerTanks.push(new Tank("Fourth Player", 180, "p2TankPNG", "p2TankBarrel"));
+    for (i = 0; i < playerCount; i++) {
+        s = "p" + (i + 1) + "TankPNG";
+        playerTanks.push(new Tank("Player " + (i + 1), 0, s, "p1TankBarrel"));
+    }
+    // playerTanks.push(new Tank("First Player", 0, "p1TankPNG", "p1TankBarrel"));
+    // playerTanks.push(new Tank("Second Player", 90, "p2TankPNG", "p2TankBarrel"));
+    // playerTanks.push(new Tank("Third Player", 90, "p1TankPNG", "p1TankBarrel"));
+    // playerTanks.push(new Tank("Fourth Player", 180, "p2TankPNG", "p2TankBarrel"));
 
     // Show the marker on the first player in the game
     playerTanks[0].showMarker();
@@ -474,7 +462,7 @@ function shoot() {
         stage.addChild(animation);
 
         for (var i in activeMissiles) {
-            stage.addChild(activeMissiles[i], 0);
+            stage.addChild(activeMissiles[i]);
         }
 
         createjs.Sound.play(gunSound); // play using id.  Could also use full source path or event.src.
