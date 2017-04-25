@@ -20,12 +20,15 @@
         tank.marker.x = 10;
         tank.marker.y = -25;
         tank.marker.moveAnimation = createjs.Tween.get(tank.marker, { paused: true, loop: true })
-        .to({ y: -35 }, 750).to({ y: -25 }, 750);
+            .to({ y: -35 }, 750).to({ y: -25 }, 750);
+
+        tank.damageText = new createjs.Text("", "10px Arial", "#F00");
 
         // Add tank bitmap, barrel bitmap, and the marker shape to the tank container
         tank.addChild(tank.bitmap);
         tank.addChild(tank.barrel);
         tank.addChild(tank.marker);
+        tank.addChild(tank.damageText);
 
         // Set common properties of the tank
         tank.name = playerName;
@@ -56,6 +59,9 @@
 
     /* FUNCTIONS RELATING TO HEALTH */
     function damageTank(amount) {
+        this.damageText.text = "-" + amount;
+        this.damageText.y = -10;
+        this.damageText.moveAnimation = createjs.Tween.get(this.damageText)
         this.health -= amount;
         if (this.health < 0) {
             this.health = 0;
@@ -67,7 +73,7 @@
     }
 
     function killTank() {
-        this.health = 0;
+        damageTank(this.health);
     }
 
     function isDead() {
