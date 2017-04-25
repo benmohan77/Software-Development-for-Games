@@ -1,10 +1,6 @@
 (function() {
 
     var Missile = function(missileType, startingAngle, velocity, startingX, startingY) {
-
-
-
-
         var graph = new createjs.Graphics();
         graph.beginStroke("#CCC").beginFill("#333");
         graph.drawCircle(0, 0, 3);
@@ -19,9 +15,7 @@
         tempMissile.hasImpacted = false;
         tempMissile.isExploding = false;
 
-
         tempMissile.startingAngle = startingAngle;
-
 
         switch (missileType) {
             case "fast":
@@ -148,10 +142,6 @@
 
         return tempMissile;
     }
-
-
-
-
 
     window.Missile = Missile;
 })();

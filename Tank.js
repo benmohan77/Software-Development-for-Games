@@ -15,12 +15,12 @@
 
         tank.marker = new createjs.Shape();
         tank.marker.graphics.beginFill("#6F6").setStrokeStyle(2)
-            .beginStroke("#26F").drawPolyStar(0, 0, 8, 3, 0.5, 90);
+        .beginStroke("#26F").drawPolyStar(0, 0, 8, 3, 0.5, 90);
         tank.marker.alpha = 0;
         tank.marker.x = 10;
         tank.marker.y = -25;
         tank.marker.moveAnimation = createjs.Tween.get(tank.marker, { paused: true, loop: true })
-            .to({ y: -35 }, 750).to({ y: -25 }, 750);
+        .to({ y: -35 }, 750).to({ y: -25 }, 750);
 
         // Add tank bitmap, barrel bitmap, and the marker shape to the tank container
         tank.addChild(tank.bitmap);
@@ -49,7 +49,7 @@
         tank.increasePowerLevel = increasePowerLevel;
         tank.showMarker = showMarker;
         tank.hideMarker = hideMarker;
-        tank.fireMissile = fireMissile;
+        tank.getMissile = getMissile;
 
         return tank;
     }
@@ -72,10 +72,6 @@
 
     function isDead() {
         return this.health <= 0;
-    }
-
-    function fireMissile() {
-        activeMissiles.push(new Missile("big", this.getBarrelRotation(), this.getPowerLevel() / 7, this.x + (landBlockSize / 2), this.y + (landBlockSize / 2)));
     }
 
     /* FUNCTIONS RELATING TO BARREL ROTATION */
@@ -130,6 +126,11 @@
     function hideMarker() {
         this.marker.moveAnimation.setPaused(true);
         this.marker.alpha = 0;
+    }
+
+    /* FUNCTIONS RELATING TO THE SHOOTING OF MISSILES */
+    function getMissile(missileType, landBlockSize) {
+        return Missile(missileType, this.getBarrelRotation(), this.getPowerLevel() / 7, this.x + (landBlockSize / 2), this.y + (landBlockSize / 2));
     }
 
     window.Tank = Tank;

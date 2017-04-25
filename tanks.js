@@ -1,6 +1,5 @@
 var blocks; // Our landscape in a 2D array
-var ticksPerSec = 60;
-var updateDelay = 1; //ticksPerSec / 30;
+var updateDelay = 2; //ticksPerSec / 30;
 var currentUpdateCount = 0;
 
 //Constants
@@ -13,8 +12,6 @@ var smokeSheet;
 var animation;
 
 // Landscape Generation Vars
-var stageXdimens;
-var stageYdimens;
 var stageXblocks;
 var stageYblocks;
 var landMin;
@@ -67,11 +64,24 @@ var lblHealth;
 var lblMovesLeft;
 var lblPowerLevel;
 
+// Some names for the tanks
+// A few were taken from game forums
+var tankNames = [
+    "Frank the Tank",
+    "Tankem",
+    "Beef Chief",
+    "InvincaBull",
+    "Honey Badger",
+    "Steve"
+];
+
 
 
 
 
 function newGame(players) {
+    stage.removeAllChildren();
+
     createjs.Sound.registerSound("gun.wav", gunSound);
     initButtons();
     landGeneration();
@@ -118,14 +128,12 @@ function newGame(players) {
     window.onkeydown = handleKeyDown;
     window.onkeyup = handleKeyUp;
 
-    p1turn = true;
-
     stage.update();
 
 }
 
 
-function tick(event) {
+function game_tick(event) {
 
     // Check to see if either all tanks are dead or all but one tank is dead
     var deathCount = 0;
@@ -215,9 +223,10 @@ function tick(event) {
 
 function addTanks(playerCount) {
     // Add our tanks
+    playerTanks = [];
     for (i = 0; i < playerCount; i++) {
         s = "p" + (i + 1) + "TankPNG";
-        playerTanks.push(new Tank("Player " + (i + 1), 0, s, "p1TankBarrel"));
+        playerTanks.push(new Tank(tankNames[i], (i + 1 <= (playerCount / 2)) ? 0 : 180, s, "tankBarrel"));
     }
     // playerTanks.push(new Tank("First Player", 0, "p1TankPNG", "p1TankBarrel"));
     // playerTanks.push(new Tank("Second Player", 90, "p2TankPNG", "p2TankBarrel"));
@@ -383,8 +392,7 @@ function initButtons() {
 }
 
 function landGeneration() {
-    stageXdimens = stage.canvas.width;
-    stageYdimens = stage.canvas.height;
+    blocks = [];
     landBlockSize = 20;
     maxLandDev = 1; // The max amount the land can deviate per step either way when generating
     landMin = (stageYdimens / landBlockSize) * 0.20; // Land must be at least 20% above bottom
@@ -450,7 +458,8 @@ function get2DArray(size) {
 
 function shoot() {
     if (!waitingForMissiles) {
-        currentTank.fireMissile();
+        activeMissiles.push(currentTank.getMissile("normal", landBlockSize));
+        //currentTank.fireMissile();
         currentTank.setMovesLeft(maxMoves);
 
         // Add smoke animation
