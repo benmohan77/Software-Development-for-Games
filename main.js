@@ -30,13 +30,14 @@ function init() {
     stageXdimens = stage.canvas.width;
     stageYdimens = stage.canvas.height;
 
+    // Create start button
     stage.enableMouseOver(30);
     var button = new Button("Start");
     button.addEventListener("click", function() {
         createjs.Ticker.removeAllEventListeners();
         createjs.Ticker.addEventListener("tick", game_tick);
         stage.enableMouseOver(0);
-        newGame(6);
+        newGame(2);
     });
     button.x = (stageXdimens / 2) - 50;
     button.y = (stageYdimens / 2) - 20;

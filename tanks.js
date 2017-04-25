@@ -3,7 +3,7 @@ var updateDelay = 2; //ticksPerSec / 30;
 var currentUpdateCount = 0;
 
 //Constants
-const maxMoves = 4;
+var maxMoves = 4;
 var gunSound = "gunSound";
 var boomSound = "boomSound";
 var ripSound = "ripSound";
@@ -82,6 +82,8 @@ var tankNames = [
 function newGame(players) {
     stage.removeAllChildren();
 
+    maxMoves = Math.floor(15 / players);
+
     createjs.Sound.registerSound("gun.wav", gunSound);
     initButtons();
     landGeneration();
@@ -113,11 +115,11 @@ function newGame(players) {
     lblBarrelRotation.y = 12;
     stage.addChild(lblBarrelRotation);
 
-    lblNowPlaying = new createjs.Text("Player:", "20px Arial", "#000000");
+    lblNowPlaying = new createjs.Text("Player:", "20px Courier New", "#000000");
     lblNowPlaying.x = 500;
     lblNowPlaying.y = 10;
 
-    lblHealth = new createjs.Text("=== Health ===", "15px Arial", "#000000");
+    lblHealth = new createjs.Text("=== Health ===", "15px Courier New", "#000000");
     lblHealth.x = 500;
     lblHealth.y = 35;
     stage.addChild(lblNowPlaying, lblHealth);
@@ -262,21 +264,27 @@ function positionTanks() {
 // Used for repositioning the height of the tanks on the screen (perhaps after block desctruction)
 function positionTanksHeight() {
     for (var i in playerTanks) {
-        var xPosition = parseInt(playerTanks[i].x / landBlockSize);
-        playerTanks[i].y = stageYdimens - (blocks[xPosition].length * landBlockSize);
+        if (!playerTanks[i].isDead()) {
+            var xPosition = parseInt(playerTanks[i].x / landBlockSize);
+            playerTanks[i].y = stageYdimens - (blocks[xPosition].length * landBlockSize);
+        }
     }
 }
 
 function playerLabel() {
     lblNowPlaying.text = "Player: " + currentTank.name;
-    var str = "=== Health ===";
+    var str = "--- Health ---";
     for (var i in playerTanks) {
         var addStr = "";
-        if (playerTanks[i].getHealth() < 10)
-            addStr = "00";
+        if (playerTanks[i].getHealth() === 0)
+            addStr = "ded";
+        else if (playerTanks[i].getHealth() < 10)
+            addStr = "00" + playerTanks[i].getHealth();
         else if (playerTanks[i].getHealth() < 100)
-            addStr = "0";
-        str += "\n" + addStr + playerTanks[i].getHealth() + " | " + playerTanks[i].name;
+            addStr = "0" + playerTanks[i].getHealth();
+        else
+            addStr = playerTanks[i].getHealth();
+        str += "\n" + addStr + " " + playerTanks[i].name;
     }
     lblHealth.text = str;
     lblBarrelRotation.text = currentTank.getBarrelRotation();
