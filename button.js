@@ -14,7 +14,7 @@
     }
 
     function changeColor(event) {
-        event.target.alpha = (event.type == "mouseover") ? 0.5 : 1;
+        event.target.alpha = (event.type == "mouseover") ? 0.65 : 1;
     }
 
     window.Button = Button;

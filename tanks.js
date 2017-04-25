@@ -1,9 +1,9 @@
 var blocks; // Our landscape in a 2D array
 var updateDelay = 2; //ticksPerSec / 30;
 var currentUpdateCount = 0;
+var maxMoves = 4;
 
 //Constants
-var maxMoves = 4;
 var gunSound = "gunSound";
 var boomSound = "boomSound";
 var ripSound = "ripSound";
