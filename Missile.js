@@ -103,7 +103,6 @@
                     blocksToDelete = null;
                     // Move tanks to correct heights
                     positionTanksHeight();
-                    stage.update();
 
                     this.hasImpacted = true;
                 });
