@@ -29,7 +29,7 @@
                 tempMissile.explosionRadius = 100;
                 tempMissile.velocityX = (velocity / 2) * Math.cos(toRadians(startingAngle));
                 tempMissile.velocityY = (-velocity / 2) * Math.sin(toRadians(startingAngle));
-                tempMissile.damageAmount = 60;
+                tempMissile.damageAmount = 90;
                 break;
             default:
                 tempMissile.velocityX = velocity * Math.cos(toRadians(startingAngle));
@@ -38,6 +38,8 @@
                 tempMissile.damageAmount = 60;
                 break;
         }
+        tempMissile.velocityX = velocity * Math.cos(toRadians(startingAngle));
+        tempMissile.velocityY = -velocity * Math.sin(toRadians(startingAngle));
 
         tempMissile.moveToNextPos = function() {
             // Check if missile has impacted with anything

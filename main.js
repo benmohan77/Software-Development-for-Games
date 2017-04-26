@@ -7,13 +7,13 @@ var ticksPerSec = 60;
 var numbPlayers = 2;
 
 // Buttons
-btnIncreasePlayers;
-btnDecreasePlayers;
+var btnIncreasePlayers;
+var btnDecreasePlayers;
 
 // Labels
-lblBanner;
-lblNumPlayersText;
-lblNumPlayers;
+var lblBanner;
+var lblNumPlayersText;
+var lblNumPlayers;
 
 function load() {
     queue = new createjs.LoadQueue(false);
@@ -23,7 +23,6 @@ function load() {
         { id: "p1TankPNG", src: "red_tank.png" },
         { id: "tankBarrel", src: "barrel.png" },
         { id: "p2TankPNG", src: "green_tank.png" },
-        //{ id: "p2TankBarrel", src: "green_tank_barrel.png" }, <-- never used
         { id: "smokeSheet", src: "smoke.png" },
         { id: "p3TankPNG", src: "orange_tank.png" },
         { id: "p4TankPNG", src: "black_tank.png" },

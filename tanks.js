@@ -137,6 +137,14 @@ function newGame(players) {
 
 function game_tick(event) {
 
+    // Make sure all tanks are still on screen
+    // If they aren't, kill them
+    for (var i in playerTanks) {
+        if (playerTanks[i].y + (landBlockSize / 2) > stageYdimens) {
+            playerTanks[i].killTank();
+        }
+    }
+
     // Check to see if either all tanks are dead or all but one tank is dead
     var deathCount = 0;
     for (var i in playerTanks) {
@@ -466,7 +474,7 @@ function get2DArray(size) {
 
 function shoot() {
     if (!waitingForMissiles) {
-        activeMissiles.push(currentTank.getMissile("normal", landBlockSize));
+        activeMissiles.push(currentTank.getMissile("big", landBlockSize));
         //currentTank.fireMissile();
         currentTank.setMovesLeft(maxMoves);
 
