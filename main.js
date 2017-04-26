@@ -63,6 +63,8 @@ function init() {
             lblNumPlayers.text = numbPlayers;
         }
     });
+    btnDecreasePlayers.on("mouseover", changeColor);
+    btnDecreasePlayers.on("mouseout", changeColor);
 
     // Create button for increasing players
     btnIncreasePlayers = new createjs.Shape();
@@ -75,10 +77,13 @@ function init() {
             lblNumPlayers.text = numbPlayers;
         }
     });
+    btnIncreasePlayers.on("mouseover", changeColor);
+    btnIncreasePlayers.on("mouseout", changeColor);
 
     // Create labels for number of players
-    lblNumPlayersText = new createjs.Text("Select Number of Players", "30px Ariel", "#000");
-    lblNumPlayersText.x = 
+    lblNumPlayersText = new createjs.Text("Players", "30px Arial", "#000");
+    lblNumPlayersText.x = (stageXdimens / 2) - 50;
+    lblNumPlayersText.y = (stageYdimens / 2) - 105;
     lblNumPlayers = new createjs.Text("2", "38px Arial", "#000");
     lblNumPlayers.x = (stageXdimens / 2) - 10;
     lblNumPlayers.y = (stageYdimens / 2) - 67;
@@ -87,10 +92,15 @@ function init() {
     stage.addChild(button);
     stage.addChild(btnDecreasePlayers);
     stage.addChild(btnIncreasePlayers);
+    stage.addChild(lblNumPlayersText);
     stage.addChild(lblNumPlayers);
 
     createjs.Ticker.setFPS(ticksPerSec);
     createjs.Ticker.addEventListener("tick", menu_tick);
+}
+
+function changeColor(event) {
+    event.target.alpha = (event.type == "mouseover") ? 0.65 : 1;
 }
 
 function menu_tick() {
