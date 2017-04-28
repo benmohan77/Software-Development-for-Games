@@ -40,6 +40,8 @@ var btnDecreasePower;
 var btnMoveRight;
 var btnMoveLeft;
 var btnFire;
+var btnNextAmmo;
+var btnPreviousAmmo;
 
 //Key variables
 const ARROW_KEY_LEFT = 37;
@@ -63,6 +65,7 @@ var lblNowPlaying;
 var lblHealth;
 var lblMovesLeft;
 var lblPowerLevel;
+var lblAmmoType;
 
 // Some names for the tanks
 // A few were taken from game forums
@@ -75,17 +78,12 @@ var tankNames = [
     "Steve"
 ];
 
-
-
-
-
 function newGame(players) {
     stage.removeAllChildren();
 
     maxMoves = Math.floor(15 / players);
 
-    createjs.Sound.registerSound("gun.wav", gunSound);
-    initButtons();
+    initUI();
     landGeneration();
     addTanks(players);
 
@@ -106,21 +104,17 @@ function newGame(players) {
     smokeSheet = new createjs.SpriteSheet(data);
     animation = new createjs.Sprite(smokeSheet, "start");
 
-    createjs.Sound.registerSound("boom.wav", boomSound);
-    createjs.Sound.registerSound("rip.wav", ripSound);
-
-
     lblBarrelRotation = new createjs.Text("0", "10px Arial", "#000000");
     lblBarrelRotation.x = 95;
     lblBarrelRotation.y = 12;
     stage.addChild(lblBarrelRotation);
 
     lblNowPlaying = new createjs.Text("Player:", "20px Courier New", "#000000");
-    lblNowPlaying.x = 500;
+    lblNowPlaying.x = 600;
     lblNowPlaying.y = 10;
 
     lblHealth = new createjs.Text("=== Health ===", "15px Courier New", "#000000");
-    lblHealth.x = 500;
+    lblHealth.x = 600;
     lblHealth.y = 35;
     stage.addChild(lblNowPlaying, lblHealth);
 
@@ -238,10 +232,6 @@ function addTanks(playerCount) {
         s = "p" + (i + 1) + "TankPNG";
         playerTanks.push(new Tank(tankNames[i], (i + 1 <= (playerCount / 2)) ? 0 : 180, s, "tankBarrel"));
     }
-    // playerTanks.push(new Tank("First Player", 0, "p1TankPNG", "p1TankBarrel"));
-    // playerTanks.push(new Tank("Second Player", 90, "p2TankPNG", "p2TankBarrel"));
-    // playerTanks.push(new Tank("Third Player", 90, "p1TankPNG", "p1TankBarrel"));
-    // playerTanks.push(new Tank("Fourth Player", 180, "p2TankPNG", "p2TankBarrel"));
 
     // Show the marker on the first player in the game
     playerTanks[0].showMarker();
@@ -298,17 +288,15 @@ function playerLabel() {
     lblBarrelRotation.text = currentTank.getBarrelRotation();
     lblMovesLeft.text = currentTank.getMovesLeft();
     lblPowerLevel.text = currentTank.getPowerLevel();
+    lblAmmoType.text = currentTank.selectedMissile.id.toUpperCase() + ": " + currentTank.selectedMissile.count;
 }
 
 //initializes the buttons for controlling the tanks
-function initButtons() {
+function initUI() {
 
     //Control Button Initialization
     //Right Rotation button
-    btnRotateRight = new createjs.Shape();
-    btnRotateRight.graphics.beginStroke("#000000").beginFill("#000000").drawPolyStar(15, 15, 15, 3, .5, 0);
-
-
+    btnRotateRight = new ArrowButton(180);
     btnRotateRight.on("mousedown", function() {
         btnRotateRightPressed = true;
     })
@@ -316,26 +304,27 @@ function initButtons() {
     btnRotateRight.on("pressup", function() {
         btnRotateRightPressed = false;
     });
+    btnRotateRight.x = 60 + 25;
+
+
 
     //Left rotation button
-    btnRotateLeft = new createjs.Shape();
-    btnRotateLeft.graphics.beginStroke("#000000").beginFill("#000000").drawPolyStar(15, 15, 15, 3, .5, 180);
-
-
+    btnRotateLeft = new ArrowButton(0);
     btnRotateLeft.on("mousedown", function() {
         btnRotateLeftPressed = true;
     });
     btnRotateLeft.on("pressup", function() {
         btnRotateLeftPressed = false;
     });
+    btnRotateLeft.x = 60 - 25;
 
     //Fire button
     btnFire = new createjs.Shape();
     btnFire.graphics.beginStroke("#000000").beginFill("#ff0000").drawRect(0, 0, 100, 35);
-    btnFire.x = 340;
+    btnFire.x = 475;
     btnFire.y = 25;
     var text = new createjs.Text("FIRE", "22px Arial", "#000000");
-    text.x = 365;
+    text.x = btnFire.x + 25;
     text.y = 33;
 
     //Moves Left label
@@ -346,39 +335,52 @@ function initButtons() {
     btnFire.addEventListener("click", shoot);
     stage.addChild(btnFire);
 
+    //Ammo Type Label
+    lblAmmoType = new createjs.Text("", "10px Arial", "#000000");
+    lblAmmoType.x = 370;
+    lblAmmoType.y = 12;
+
+    //Next Ammo Button
+    btnNextAmmo = new ArrowButton(180);
+    btnNextAmmo.addEventListener("click", function() { currentTank.nextMissile(); });
+    btnNextAmmo.x = 390 + 25;
+
+    //Previous Ammo Button
+    btnPreviousAmmo = new ArrowButton(0);
+    btnPreviousAmmo.addEventListener("click", function() {
+        currentTank.previousMissile();
+    });
+    btnPreviousAmmo.x = 390 - 25;
     //Right move button
-    btnMoveRight = new createjs.Shape();
-    btnMoveRight.graphics.beginStroke("#000000").beginFill("#000000").drawPolyStar(15, 15, 15, 3, .5, 0);
+    btnMoveRight = new ArrowButton(180);
     btnMoveRight.addEventListener("click", moveTankRight);
+    btnMoveRight.x = 170 + 25;
 
     //Left move button
-    btnMoveLeft = new createjs.Shape();
-    btnMoveLeft.graphics.beginStroke("#000000").beginFill("#000000").drawPolyStar(15, 15, 15, 3, .5, 180);
+    btnMoveLeft = new ArrowButton(0);
     btnMoveLeft.addEventListener("click", moveTankLeft);
+    btnMoveLeft.x = 170 - 25;
 
     //Power down button;
-    btnDecreasePower = new createjs.Shape();
-    btnDecreasePower.graphics.beginStroke("#000000").beginFill("#000000").drawPolyStar(15, 15, 15, 3, .5, 180);
+    btnDecreasePower = new ArrowButton(0);
     btnDecreasePower.on("mousedown", function() {
         btnDecreasePowerPressed = true;
     });
     btnDecreasePower.on("pressup", function() {
         btnDecreasePowerPressed = false;
     });
+    btnDecreasePower.x = 270 - 25;
 
     //Power Up Button
-    btnIncreasePower = new createjs.Shape();
-    btnIncreasePower.graphics.beginStroke("#000000").beginFill("#000000").drawPolyStar(15, 15, 15, 3, .5, 0);
+    btnIncreasePower = new ArrowButton(180);
     btnIncreasePower.on("mousedown", function() {
         btnIncreasePowerPressed = true;
     });
     btnIncreasePower.on("pressup", function() {
         btnIncreasePowerPressed = false;
     });
-    btnIncreasePower.x = 270;
-    btnIncreasePower.y = 25;
-    btnDecreasePower.x = 250;
-    btnDecreasePower.y = 25;
+    btnIncreasePower.x = 270 + 25;
+
 
     //Power Labels
     lblPowerLevel = new createjs.Text("", "10px Arial", "#000000");
@@ -398,13 +400,9 @@ function initButtons() {
     power.x = 250;
     power.y = 12;
 
-    btnRotateRight.x = 60;
-    btnRotateRight.y = btnRotateLeft.y = btnMoveRight.y = btnMoveLeft.y = 25;
-    btnRotateLeft.x = 40;
-    btnMoveRight.x = 170;
-    btnMoveLeft.x = 150;
+    btnRotateRight.y = btnNextAmmo.y = btnPreviousAmmo.y = btnRotateLeft.y = btnDecreasePower.y = btnIncreasePower.y = btnMoveRight.y = btnMoveLeft.y = 40;
 
-    stage.addChild(btnRotateRight, btnRotateLeft, lblBarrelRotation, btnMoveRight, btnMoveLeft, text, lblMovesLeft, moves, angle, btnDecreasePower, btnIncreasePower, power, lblPowerLevel);
+    stage.addChild(lblAmmoType, btnNextAmmo, btnPreviousAmmo, btnRotateRight, btnRotateLeft, lblBarrelRotation, btnMoveRight, btnMoveLeft, text, lblMovesLeft, moves, angle, btnDecreasePower, btnIncreasePower, power, lblPowerLevel);
 }
 
 function landGeneration() {
@@ -474,7 +472,7 @@ function get2DArray(size) {
 
 function shoot() {
     if (!waitingForMissiles) {
-        activeMissiles.push(currentTank.getMissile("big", landBlockSize));
+        activeMissiles.push(currentTank.getMissile(landBlockSize));
         //currentTank.fireMissile();
         currentTank.setMovesLeft(maxMoves);
 

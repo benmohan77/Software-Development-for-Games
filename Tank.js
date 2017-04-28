@@ -15,7 +15,7 @@
 
         tank.marker = new createjs.Shape();
         tank.marker.graphics.beginFill("#6F6").setStrokeStyle(2)
-        .beginStroke("#26F").drawPolyStar(0, 0, 8, 3, 0.5, 90);
+            .beginStroke("#26F").drawPolyStar(0, 0, 8, 3, 0.5, 90);
         tank.marker.alpha = 0;
         tank.marker.x = 10;
         tank.marker.y = -25;
@@ -38,6 +38,8 @@
 
         // Set tank functions
         tank.damageTank = damageTank;
+        tank.nextMissile = nextMissile;
+        tank.previousMissile = previousMissile;
         tank.getHealth = getHealth;
         tank.killTank = killTank;
         tank.isDead = isDead;
@@ -53,6 +55,13 @@
         tank.showMarker = showMarker;
         tank.hideMarker = hideMarker;
         tank.getMissile = getMissile;
+        tank.MISSILES = {
+            normal: { id: "normal", count: 100 },
+            big: { id: "big", count: 10 },
+            fast: { id: "fast", count: 20 }
+        };
+        tank.selectedMissile = tank.MISSILES.normal;
+
 
         return tank;
     }
@@ -70,6 +79,37 @@
             }
         }
     }
+
+    function nextMissile() {
+        switch (this.selectedMissile) {
+            case this.MISSILES.normal:
+                this.selectedMissile = this.MISSILES.big;
+                break;
+            case this.MISSILES.big:
+                this.selectedMissile = this.MISSILES.fast;
+                break;
+            case this.MISSILES.fast:
+                this.selectedMissile = this.MISSILES.normal;
+                break;
+        }
+    }
+
+    function previousMissile() {
+        switch (this.selectedMissile) {
+            case this.MISSILES.normal:
+                this.selectedMissile = this.MISSILES.fast;
+                break;
+            case this.MISSILES.fast:
+                this.selectedMissile = this.MISSILES.big;
+                break;
+            case this.MISSILES.big:
+                this.selectedMissile = this.MISSILES.normal;
+                break;
+        }
+    }
+
+
+
 
     function getHealth() {
         return this.health;
@@ -138,8 +178,12 @@
     }
 
     /* FUNCTIONS RELATING TO THE SHOOTING OF MISSILES */
-    function getMissile(missileType, landBlockSize) {
-        return Missile(missileType, this.getBarrelRotation(), this.getPowerLevel() / 7, this.x + (landBlockSize / 2), this.y + (landBlockSize / 2));
+    function getMissile(landBlockSize) {
+        if (this.selectedMissile.count > 0) {
+            this.selectedMissile.count--;
+            return Missile(this.selectedMissile.id, this.getBarrelRotation(), this.getPowerLevel() / 7, this.x + (landBlockSize / 2), this.y + (landBlockSize / 2));
+
+        }
     }
 
     window.Tank = Tank;

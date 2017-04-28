@@ -51,33 +51,32 @@ function init() {
     button.x = (stageXdimens / 2) - 50;
     button.y = (stageYdimens / 2) - 20;
 
+    //Sound initialization
+    createjs.Sound.registerSound("gun.wav", gunSound);
+    createjs.Sound.registerSound("boom.wav", boomSound);
+    createjs.Sound.registerSound("rip.wav", ripSound);
+
     // Create button for decreasing players
-    btnDecreasePlayers = new createjs.Shape();
-    btnDecreasePlayers.graphics.beginStroke("#000000").beginFill("#000000").drawPolyStar(15, 15, 15, 3, .5, 180);
+    btnDecreasePlayers = new ArrowButton(0);
     btnDecreasePlayers.x = (stageXdimens / 2) - 50;
-    btnDecreasePlayers.y = (stageYdimens / 2) - 65;
+    btnDecreasePlayers.y = (stageYdimens / 2) - 50;
     btnDecreasePlayers.on("click", function() {
         if (numbPlayers > 2) {
             numbPlayers--;
             lblNumPlayers.text = numbPlayers;
         }
     });
-    btnDecreasePlayers.on("mouseover", changeColor);
-    btnDecreasePlayers.on("mouseout", changeColor);
 
     // Create button for increasing players
-    btnIncreasePlayers = new createjs.Shape();
-    btnIncreasePlayers.graphics.beginStroke("#000000").beginFill("#000000").drawPolyStar(15, 15, 15, 3, .5, 0);
-    btnIncreasePlayers.x = (stageXdimens / 2) + 20;
-    btnIncreasePlayers.y = (stageYdimens / 2) - 65;
+    btnIncreasePlayers = new ArrowButton(180);
+    btnIncreasePlayers.x = (stageXdimens / 2) + 50;
+    btnIncreasePlayers.y = (stageYdimens / 2) - 50;
     btnIncreasePlayers.on("click", function() {
         if (numbPlayers < 6) {
             numbPlayers++;
             lblNumPlayers.text = numbPlayers;
         }
     });
-    btnIncreasePlayers.on("mouseover", changeColor);
-    btnIncreasePlayers.on("mouseout", changeColor);
 
     // Create labels for number of players
     lblNumPlayersText = new createjs.Text("Players", "30px Arial", "#000");

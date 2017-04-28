@@ -20,8 +20,9 @@
         switch (missileType) {
             case "fast":
                 tempMissile.explosionRadius = 20;
-                tempMissile.velocityX = velocity * Math.cos(toRadians(startingAngle)) * 2;
-                tempMissile.velocityY = -velocity * Math.sin(toRadians(startingAngle)) * 2;
+                console.log("fast");
+                tempMissile.velocityX = velocity * Math.cos(toRadians(startingAngle)) * 4;
+                tempMissile.velocityY = -velocity * Math.sin(toRadians(startingAngle)) * 4;
                 tempMissile.damageAmount = 60;
                 break;
             case "big":
