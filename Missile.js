@@ -67,6 +67,8 @@
                     for (var i in playerTanks) {
                         tankDistance = Math.sqrt(Math.pow(this.x - (playerTanks[i].x + (landBlockSize / 2)), 2) + Math.pow(this.y - (playerTanks[i].y + (landBlockSize / 2)), 2));
                         if (tankDistance <= this.explosionRadius) {
+                            var damage = parseInt((1 - (tankDistance / this.explosionRadius)) * this.damageAmount);
+                            currentTank.addMoney(damage);
                             playerTanks[i].damageTank(parseInt((1 - (tankDistance / this.explosionRadius)) * this.damageAmount));
                         }
                     }

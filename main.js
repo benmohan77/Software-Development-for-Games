@@ -41,7 +41,7 @@ function init() {
 
     // Create start button
     stage.enableMouseOver(30);
-    var button = new Button("Start");
+    var button = new Button("Start", 20);
     button.addEventListener("click", function() {
         createjs.Ticker.removeAllEventListeners();
         createjs.Ticker.addEventListener("tick", game_tick);
@@ -95,6 +95,8 @@ function init() {
 
     createjs.Ticker.setFPS(ticksPerSec);
     createjs.Ticker.addEventListener("tick", menu_tick);
+    createTanks(numbPlayers);
+
 }
 
 function changeColor(event) {
@@ -103,4 +105,13 @@ function changeColor(event) {
 
 function menu_tick() {
     stage.update();
+}
+
+function createTanks(playerCount) {
+    // Add our tanks
+    playerTanks = [];
+    for (i = 0; i < playerCount; i++) {
+        s = "p" + (i + 1) + "TankPNG";
+        playerTanks.push(new Tank(tankNames[i], (i + 1 <= (playerCount / 2)) ? 0 : 180, s, "tankBarrel"));
+    }
 }

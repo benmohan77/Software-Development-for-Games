@@ -35,6 +35,7 @@
         tank.health = 100;
         tank.movesLeft = 0;
         tank.powerLevel = 50;
+        tank.money = 100;
 
         // Set tank functions
         tank.damageTank = damageTank;
@@ -55,10 +56,18 @@
         tank.showMarker = showMarker;
         tank.hideMarker = hideMarker;
         tank.getMissile = getMissile;
+        tank.getMoney = getMoney;
+        tank.getNormalCost = getNormalCost;
+        tank.getBigCost = getBigCost;
+        tank.getFastCost = getFastCost;
+        tank.addMoney = addMoney;
+        tank.removeMoney = removeMoney;
+        tank.addMissiles = addMissiles;
+        tank.resetHealth = resetHealth;
         tank.MISSILES = {
-            normal: { id: "normal", count: 100 },
-            big: { id: "big", count: 10 },
-            fast: { id: "fast", count: 20 }
+            normal: { id: "normal", count: 100, cost: 1 },
+            big: { id: "big", count: 10, cost: 10 },
+            fast: { id: "fast", count: 20, cost: 5 }
         };
         tank.selectedMissile = tank.MISSILES.normal;
 
@@ -175,6 +184,43 @@
     function hideMarker() {
         this.marker.moveAnimation.setPaused(true);
         this.marker.alpha = 0;
+    }
+
+    function addMoney(amount) {
+        this.money = this.money + amount;
+    }
+
+    function removeMoney() {
+        this.money = this.money - amount;
+    }
+
+    function resetHealth() {
+        if (this.health < 1) {
+            this.health = 100;
+        }
+    }
+
+    function getNormalCost() {
+        return this.MISSILES.normal.cost;
+    }
+
+    function getBigCost() {
+        return this.MISSILES.big.cost;
+    }
+
+    function getFastCost() {
+        return this.MISSILES.fast.cost;
+    }
+
+    function addMissiles(normal, big, fast) {
+        this.MISSILES.normal.count = this.MISSILES.normal.count + normal;
+        this.MISSILES.big.count = this.MISSILES.big.count + big;
+        this.MISSILES.fast.count = this.MISSILES.fast.count + fast;
+
+    }
+
+    function getMoney() {
+        return this.money;
     }
 
     /* FUNCTIONS RELATING TO THE SHOOTING OF MISSILES */

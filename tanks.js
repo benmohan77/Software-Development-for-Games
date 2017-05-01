@@ -66,6 +66,7 @@ var lblHealth;
 var lblMovesLeft;
 var lblPowerLevel;
 var lblAmmoType;
+var screenElements = [];
 
 // Some names for the tanks
 // A few were taken from game forums
@@ -80,7 +81,7 @@ var tankNames = [
 
 function newGame(players) {
     stage.removeAllChildren();
-
+    createjs.Ticker.addEventListener("tick", game_tick);
     maxMoves = Math.floor(15 / players);
 
     initUI();
@@ -152,7 +153,17 @@ function game_tick(event) {
         var gameover = new createjs.Text("Game Over", "30px Arial", "#000000");
         gameover.x = (stageXdimens / 2) - 75; // 245; // 75px off center
         gameover.y = (stageYdimens / 2) - 15; // 225; // 15px off center
-        stage.addChild(gameover);
+        stage.removeAllChildren();
+        var cont = new Button("Store", 18);
+        cont.x = (stageXdimens / 2) - 55;
+        cont.y = (stageYdimens / 2) + 30;
+        cont.addEventListener("click", function() {
+            stage.removeAllChildren();
+            openMenu(playerTanks[0], 0, playerTanks.length);
+            stage.update();
+        });
+
+        stage.addChild(gameover, cont);
         // Remove the dead players from the stage
         // This will need to be moved so each dead player doesn't remain on screen until there is a winner
         for (var i in playerTanks) {
@@ -225,13 +236,9 @@ function game_tick(event) {
 }
 
 
-function addTanks(playerCount) {
-    // Add our tanks
-    playerTanks = [];
-    for (i = 0; i < playerCount; i++) {
-        s = "p" + (i + 1) + "TankPNG";
-        playerTanks.push(new Tank(tankNames[i], (i + 1 <= (playerCount / 2)) ? 0 : 180, s, "tankBarrel"));
-    }
+
+
+function addTanks() {
 
     // Show the marker on the first player in the game
     playerTanks[0].showMarker();
@@ -242,6 +249,7 @@ function addTanks(playerCount) {
     for (var i in playerTanks) {
         playerTanks[i].setMovesLeft(maxMoves);
         stage.addChild(playerTanks[i]);
+        playerTanks[i].resetHealth();
     }
 
     currentTankIndex = 0;
@@ -401,7 +409,6 @@ function initUI() {
     power.y = 12;
 
     btnRotateRight.y = btnNextAmmo.y = btnPreviousAmmo.y = btnRotateLeft.y = btnDecreasePower.y = btnIncreasePower.y = btnMoveRight.y = btnMoveLeft.y = 40;
-
     stage.addChild(lblAmmoType, btnNextAmmo, btnPreviousAmmo, btnRotateRight, btnRotateLeft, lblBarrelRotation, btnMoveRight, btnMoveLeft, text, lblMovesLeft, moves, angle, btnDecreasePower, btnIncreasePower, power, lblPowerLevel);
 }
 
