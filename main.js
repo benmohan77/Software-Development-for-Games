@@ -43,7 +43,8 @@ function init() {
     stage.enableMouseOver(30);
     var button = new Button("Start", 20);
     button.addEventListener("click", function() {
-        createjs.Ticker.removeAllEventListeners();
+        //createjs.Ticker.removeAllEventListeners();
+        createjs.Ticker.removeEventListener("tick", menu_tick);
         createjs.Ticker.addEventListener("tick", game_tick);
         stage.enableMouseOver(0);
         newGame(numbPlayers);

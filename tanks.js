@@ -81,12 +81,16 @@ var tankNames = [
 
 function newGame(players) {
     stage.removeAllChildren();
+    createjs.Ticker.setFPS(ticksPerSec);
+    //createjs.Ticker.removeAllEventListeners();
+    createjs.Ticker.removeEventListener("tick", store_tick);
+    createjs.Ticker.removeEventListener("tick", menu_tick);
     createjs.Ticker.addEventListener("tick", game_tick);
     maxMoves = Math.floor(15 / players);
 
     initUI();
     landGeneration();
-    addTanks(players);
+    addTanks();
 
     smokeSheetIMG = queue.getResult("smokeSheet");
 
@@ -131,7 +135,6 @@ function newGame(players) {
 
 
 function game_tick(event) {
-
     // Make sure all tanks are still on screen
     // If they aren't, kill them
     for (var i in playerTanks) {
@@ -149,7 +152,8 @@ function game_tick(event) {
         }
     }
     if (deathCount >= playerTanks.length - 1) {
-        createjs.Ticker.removeAllEventListeners();
+        //createjs.Ticker.removeAllEventListeners();
+        createjs.Ticker.removeEventListener("tick", game_tick);
         var gameover = new createjs.Text("Game Over", "30px Arial", "#000000");
         gameover.x = (stageXdimens / 2) - 75; // 245; // 75px off center
         gameover.y = (stageYdimens / 2) - 15; // 225; // 15px off center
@@ -164,13 +168,7 @@ function game_tick(event) {
         });
 
         stage.addChild(gameover, cont);
-        // Remove the dead players from the stage
-        // This will need to be moved so each dead player doesn't remain on screen until there is a winner
-        for (var i in playerTanks) {
-            if (playerTanks[i].isDead()) {
-                playerTanks[i].removeAllChildren();
-            }
-        }
+        
         stage.update();
         createjs.Sound.play(ripSound);
         createjs.Sound.mute = true;
@@ -242,6 +240,12 @@ function addTanks() {
 
     // Show the marker on the first player in the game
     playerTanks[0].showMarker();
+    // Remove the marker from all other players
+    for (var i in playerTanks) {
+        if (i > 0) {
+            playerTanks[i].hideMarker();
+        }
+    }
 
     // Position each tank on the field
     positionTanks();

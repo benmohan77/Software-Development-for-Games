@@ -78,14 +78,17 @@
     /* FUNCTIONS RELATING TO HEALTH */
     function damageTank(amount) {
         if (amount !== 0) {
-            this.damageText.text = "-" + amount;
-            this.damageText.y = -10;
-            this.damageText.moveAnimation = createjs.Tween.get(this.damageText)
-                .to({ alpha: 1, y: -20 }, 500).wait(1000).to({ alpha: 0, y: -30 }, 500);
-            this.health -= amount;
-            if (this.health < 0) {
-                this.health = 0;
+            try {
+                this.damageText.text = "-" + amount;
+                this.damageText.y = -10;
+                this.damageText.moveAnimation = createjs.Tween.get(this.damageText)
+                    .to({ alpha: 1, y: -20 }, 500).wait(1000).to({ alpha: 0, y: -30 }, 500);
+                this.health -= amount;
+                if (this.health < 0) {
+                    this.health = 0;
+                }
             }
+            catch (e) { }
         }
     }
 
@@ -195,9 +198,7 @@
     }
 
     function resetHealth() {
-        if (this.health < 1) {
-            this.health = 100;
-        }
+        this.health = 100;
     }
 
     function getNormalCost() {
