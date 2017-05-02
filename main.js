@@ -56,6 +56,7 @@ function init() {
     createjs.Sound.registerSound("gun.wav", gunSound);
     createjs.Sound.registerSound("boom.wav", boomSound);
     createjs.Sound.registerSound("rip.wav", ripSound);
+    createjs.Sound.registerSound("empty_click.mp3", emptyClickSound);
 
     // Create button for decreasing players
     btnDecreasePlayers = new ArrowButton(0);

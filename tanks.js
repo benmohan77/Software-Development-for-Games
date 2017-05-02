@@ -7,6 +7,7 @@ var maxMoves = 4;
 var gunSound = "gunSound";
 var boomSound = "boomSound";
 var ripSound = "ripSound";
+var emptyClickSound = "emptyClickSound";
 var smokeSheetIMG = "smokeSheet";
 var smokeSheet;
 var animation;
@@ -168,7 +169,7 @@ function game_tick(event) {
         });
 
         stage.addChild(gameover, cont);
-        
+
         stage.update();
         createjs.Sound.play(ripSound);
         createjs.Sound.mute = true;
@@ -483,23 +484,28 @@ function get2DArray(size) {
 
 function shoot() {
     if (!waitingForMissiles) {
-        activeMissiles.push(currentTank.getMissile(landBlockSize));
-        //currentTank.fireMissile();
-        currentTank.setMovesLeft(maxMoves);
+        if (currentTank.selectedMissile.count > 0) {
+            activeMissiles.push(currentTank.getMissile(landBlockSize));
+            //currentTank.fireMissile();
+            currentTank.setMovesLeft(maxMoves);
 
-        // Add smoke animation
-        animation.x = currentTank.x + (landBlockSize / 2) + (12 * Math.cos(toRadians(-currentTank.getBarrelRotation())));
-        animation.y = currentTank.y + (landBlockSize / 2) + (12 * Math.sin(toRadians(-currentTank.getBarrelRotation())));
-        animation.scaleX = .5;
-        animation.scaleY = .5;
-        animation.gotoAndPlay("start");
-        stage.addChild(animation);
+            // Add smoke animation
+            animation.x = currentTank.x + (landBlockSize / 2) + (12 * Math.cos(toRadians(-currentTank.getBarrelRotation())));
+            animation.y = currentTank.y + (landBlockSize / 2) + (12 * Math.sin(toRadians(-currentTank.getBarrelRotation())));
+            animation.scaleX = .5;
+            animation.scaleY = .5;
+            animation.gotoAndPlay("start");
+            stage.addChild(animation);
 
-        for (var i in activeMissiles) {
-            stage.addChild(activeMissiles[i]);
+            for (var i in activeMissiles) {
+                stage.addChild(activeMissiles[i]);
+            }
+
+            createjs.Sound.play(gunSound); // play using id.  Could also use full source path or event.src.
         }
-
-        createjs.Sound.play(gunSound); // play using id.  Could also use full source path or event.src.
+        else {
+            createjs.Sound.play(emptyClickSound);
+        }
     }
 }
 
