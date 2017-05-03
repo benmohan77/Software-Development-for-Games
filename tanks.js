@@ -2,6 +2,7 @@ var blocks; // Our landscape in a 2D array
 var updateDelay = 2; //ticksPerSec / 30;
 var currentUpdateCount = 0;
 var maxMoves = 4;
+var maxMoveHeight = 2;
 
 //Constants
 var gunSound = "gunSound";
@@ -590,9 +591,18 @@ function moveTankLeft() {
         if (currentTank.getMovesLeft() > 0 && currentTank.x > 0) {
             var xPosition = parseInt(currentTank.x / landBlockSize) - 1;
             var yPosition = blocks[xPosition].length;
-            currentTank.x = landBlockSize * xPosition;
-            currentTank.y = stageYdimens - (landBlockSize * yPosition);
-            currentTank.useMove();
+            
+            // Make sure the tank doesn't move more than two blocks above itself
+            var deltaPos = yPosition - blocks[xPosition + 1].length;
+            if (deltaPos <= maxMoveHeight) {
+                currentTank.x = landBlockSize * xPosition;
+                currentTank.y = stageYdimens - (landBlockSize * yPosition);
+                currentTank.useMove();
+                // Add fall damage
+                if (deltaPos < -maxMoveHeight) {
+                    currentTank.damageTank((deltaPos + maxMoveHeight) * -10);
+                }
+            }
         }
     }
 }
@@ -602,9 +612,18 @@ function moveTankRight() {
         if (currentTank.getMovesLeft() > 0 && currentTank.x < stageXdimens - landBlockSize) {
             var xPosition = parseInt(currentTank.x / landBlockSize) + 1;
             var yPosition = blocks[xPosition].length;
-            currentTank.x = landBlockSize * xPosition;
-            currentTank.y = stageYdimens - (landBlockSize * yPosition);
-            currentTank.useMove();
+
+            // Make sure the tank doesn't move more than two blocks above itself
+            var deltaPos = yPosition - blocks[xPosition - 1].length;
+            if (deltaPos <= maxMoveHeight) {
+                currentTank.x = landBlockSize * xPosition;
+                currentTank.y = stageYdimens - (landBlockSize * yPosition);
+                currentTank.useMove();
+                // Add fall damage
+                if (deltaPos < -maxMoveHeight) {
+                    currentTank.damageTank((deltaPos + maxMoveHeight) * -10);
+                }
+            }
         }
     }
 }
