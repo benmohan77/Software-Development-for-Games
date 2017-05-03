@@ -110,19 +110,7 @@ function newGame(players) {
     smokeSheet = new createjs.SpriteSheet(data);
     animation = new createjs.Sprite(smokeSheet, "start");
 
-    lblBarrelRotation = new createjs.Text("0", "10px Arial", "#000000");
-    lblBarrelRotation.x = 95;
-    lblBarrelRotation.y = 12;
-    stage.addChild(lblBarrelRotation);
 
-    lblNowPlaying = new createjs.Text("Player:", "20px Courier New", "#000000");
-    lblNowPlaying.x = 600;
-    lblNowPlaying.y = 10;
-
-    lblHealth = new createjs.Text("=== Health ===", "15px Courier New", "#000000");
-    lblHealth.x = 600;
-    lblHealth.y = 35;
-    stage.addChild(lblNowPlaying, lblHealth);
 
 
 
@@ -143,7 +131,6 @@ function game_tick(event) {
             playerTanks[i].killTank();
         }
     }
-
     // Check to see if either all tanks are dead or all but one tank is dead
     var deathCount = 0;
     for (var i in playerTanks) {
@@ -154,6 +141,8 @@ function game_tick(event) {
     }
     if (deathCount >= playerTanks.length - 1) {
         //createjs.Ticker.removeAllEventListeners();
+        lblBarrelRotation.text = "";
+        stage.removeChild(lblBarrelRotation);
         createjs.Ticker.removeEventListener("tick", game_tick);
         var gameover = new createjs.Text("Game Over", "30px Arial", "#000000");
         gameover.x = (stageXdimens / 2) - 75; // 245; // 75px off center
@@ -217,7 +206,6 @@ function game_tick(event) {
                 //console.log("Number of active missiles: " + activeMissiles.length);
 
                 // Change turns
-                currentTank.hideMarker();
                 do {
                     currentTankIndex = (currentTankIndex + 1) % playerTanks.length;
                     currentTank = playerTanks[currentTankIndex];
@@ -400,6 +388,21 @@ function initUI() {
     lblPowerLevel.x = 285;
     lblPowerLevel.y = 12;
 
+
+    lblBarrelRotation = new createjs.Text("0", "10px Arial", "#000000");
+    lblBarrelRotation.x = 95;
+    lblBarrelRotation.y = 12;
+    stage.addChild(lblBarrelRotation);
+
+    lblNowPlaying = new createjs.Text("Player:", "20px Courier New", "#000000");
+    lblNowPlaying.x = 600;
+    lblNowPlaying.y = 10;
+
+    lblHealth = new createjs.Text("=== Health ===", "15px Courier New", "#000000");
+    lblHealth.x = 600;
+    lblHealth.y = 35;
+    stage.addChild(lblNowPlaying, lblHealth);
+
     //Misc Labels
     var moves = new createjs.Text("Moves Left:", "10px Arial", "#000000");
     moves.x = 143;
@@ -414,7 +417,7 @@ function initUI() {
     power.y = 12;
 
     btnRotateRight.y = btnNextAmmo.y = btnPreviousAmmo.y = btnRotateLeft.y = btnDecreasePower.y = btnIncreasePower.y = btnMoveRight.y = btnMoveLeft.y = 40;
-    stage.addChild(lblAmmoType, btnNextAmmo, btnPreviousAmmo, btnRotateRight, btnRotateLeft, lblBarrelRotation, btnMoveRight, btnMoveLeft, text, lblMovesLeft, moves, angle, btnDecreasePower, btnIncreasePower, power, lblPowerLevel);
+    stage.addChild(lblAmmoType, btnNextAmmo, btnPreviousAmmo, btnRotateRight, btnRotateLeft, btnMoveRight, btnMoveLeft, text, lblMovesLeft, moves, angle, btnDecreasePower, btnIncreasePower, power, lblPowerLevel);
 }
 
 function landGeneration() {
@@ -488,7 +491,7 @@ function shoot() {
             activeMissiles.push(currentTank.getMissile(landBlockSize));
             //currentTank.fireMissile();
             currentTank.setMovesLeft(maxMoves);
-
+            currentTank.hideMarker();
             // Add smoke animation
             animation.x = currentTank.x + (landBlockSize / 2) + (12 * Math.cos(toRadians(-currentTank.getBarrelRotation())));
             animation.y = currentTank.y + (landBlockSize / 2) + (12 * Math.sin(toRadians(-currentTank.getBarrelRotation())));
@@ -502,8 +505,7 @@ function shoot() {
             }
 
             createjs.Sound.play(gunSound); // play using id.  Could also use full source path or event.src.
-        }
-        else {
+        } else {
             createjs.Sound.play(emptyClickSound);
         }
     }

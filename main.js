@@ -15,6 +15,8 @@ var lblBanner;
 var lblNumPlayersText;
 var lblNumPlayers;
 
+
+
 function load() {
     queue = new createjs.LoadQueue(false);
     queue.on("complete", init, this);
@@ -47,7 +49,11 @@ function init() {
         createjs.Ticker.removeEventListener("tick", menu_tick);
         createjs.Ticker.addEventListener("tick", game_tick);
         stage.enableMouseOver(0);
+        createTanks(numbPlayers);
+
         newGame(numbPlayers);
+        console.log("Number of Players:" + numbPlayers);
+
     });
     button.x = (stageXdimens / 2) - 50;
     button.y = (stageYdimens / 2) - 20;
@@ -78,6 +84,7 @@ function init() {
             numbPlayers++;
             lblNumPlayers.text = numbPlayers;
         }
+
     });
 
     // Create labels for number of players
@@ -97,7 +104,6 @@ function init() {
 
     createjs.Ticker.setFPS(ticksPerSec);
     createjs.Ticker.addEventListener("tick", menu_tick);
-    createTanks(numbPlayers);
 
 }
 
@@ -113,6 +119,7 @@ function createTanks(playerCount) {
     // Add our tanks
     playerTanks = [];
     for (i = 0; i < playerCount; i++) {
+        console.log(i);
         s = "p" + (i + 1) + "TankPNG";
         playerTanks.push(new Tank(tankNames[i], (i + 1 <= (playerCount / 2)) ? 0 : 180, s, "tankBarrel"));
     }

@@ -14,6 +14,7 @@
         tempMissile.time = 0;
         tempMissile.hasImpacted = false;
         tempMissile.isExploding = false;
+        tempMissile.collidedWithTank = false;
 
         tempMissile.startingAngle = startingAngle;
 
@@ -51,7 +52,16 @@
             //console.log("blocks[xBlockPos].length: " + blocks[xBlockPos].length);
             //console.log("blocks[xBlockPos].length * landBlockSize: " + (blocks[xBlockPos].length * landBlockSize));
             //console.log("stageYdimens - (blocks[xBlockPos].length * landBlockSize): " + (landBlockSize + stageYdimens - (blocks[xBlockPos].length * landBlockSize)));
-            if (!this.isExploding && xBlockPos >= 0 && xBlockPos < blocks.length && this.y >= (landBlockSize + stageYdimens - (blocks[xBlockPos].length * landBlockSize))) {
+            for (i = 0; i < playerTanks.length; i++) {
+                var p = playerTanks[i].globalToLocal(this.x, this.y);
+                if (
+                    (this.time > 7) &&
+                    playerTanks[i].hitTest(p.x, p.y)
+                ) {
+                    this.collidedWithTank = true;
+                }
+            };
+            if ((!this.isExploding && xBlockPos >= 0 && xBlockPos < blocks.length && this.y >= (landBlockSize + stageYdimens - (blocks[xBlockPos].length * landBlockSize))) || (!this.isExploding && this.collidedWithTank)) {
                 // The missile has now impacted
                 //this.hasImpacted = true;
                 console.log("has impacted");
