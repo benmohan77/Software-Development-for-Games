@@ -65,9 +65,9 @@
         tank.addMissiles = addMissiles;
         tank.resetHealth = resetHealth;
         tank.MISSILES = {
-            normal: { id: "normal", count: 100, cost: 1 },
+            normal: { id: "normal", count: 20, cost: 1 },
             big: { id: "big", count: 1, cost: 50 },
-            fast: { id: "fast", count: 5, cost: 20 }
+            fast: { id: "fast", count: 3, cost: 20 }
         };
         tank.selectedMissile = tank.MISSILES.normal;
 

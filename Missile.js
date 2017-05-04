@@ -23,8 +23,8 @@
                 console.log("fast");
                 tempMissile.velocityX = velocity * Math.cos(toRadians(startingAngle)) * 4;
                 tempMissile.velocityY = -velocity * Math.sin(toRadians(startingAngle)) * 4;
-                tempMissile.explosionRadius = 20;
-                tempMissile.damageAmount = 75;
+                tempMissile.explosionRadius = 25;
+                tempMissile.damageAmount = 100;
                 break;
             case "big":
                 console.log("big");

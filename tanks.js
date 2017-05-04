@@ -84,6 +84,7 @@ var tankNames = [
 function newGame(players) {
     stage.removeAllChildren();
     createjs.Ticker.setFPS(ticksPerSec);
+    waitingForMissiles = false;
     //createjs.Ticker.removeAllEventListeners();
     createjs.Ticker.removeEventListener("tick", store_tick);
     createjs.Ticker.removeEventListener("tick", menu_tick);
@@ -110,10 +111,6 @@ function newGame(players) {
 
     smokeSheet = new createjs.SpriteSheet(data);
     animation = new createjs.Sprite(smokeSheet, "start");
-
-
-
-
 
     // KEYBOARD
     window.onkeydown = handleKeyDown;
@@ -146,11 +143,11 @@ function game_tick(event) {
         stage.removeChild(lblBarrelRotation);
         createjs.Ticker.removeEventListener("tick", game_tick);
         var gameover = new createjs.Text("Game Over", "30px Arial", "#000000");
-        gameover.x = (stageXdimens / 2) - 75; // 245; // 75px off center
-        gameover.y = (stageYdimens / 2) - 15; // 225; // 15px off center
-        stage.removeAllChildren();
+        gameover.x = (stageXdimens / 2) - 77;
+        gameover.y = (stageYdimens / 2) - 15;
+        waitingForMissiles = true;
         var cont = new Button("Store", 18);
-        cont.x = (stageXdimens / 2) - 55;
+        cont.x = (stageXdimens / 2) - 50;
         cont.y = (stageYdimens / 2) + 30;
         cont.addEventListener("click", function() {
             stage.removeAllChildren();
@@ -207,6 +204,7 @@ function game_tick(event) {
                 //console.log("Number of active missiles: " + activeMissiles.length);
 
                 // Change turns
+                currentTank.hideMarker();
                 do {
                     currentTankIndex = (currentTankIndex + 1) % playerTanks.length;
                     currentTank = playerTanks[currentTankIndex];
@@ -227,32 +225,27 @@ function game_tick(event) {
 
 
 function addTanks() {
-
-    // Show the marker on the first player in the game
-    playerTanks[0].showMarker();
-    // Remove the marker from all other players
-    for (var i in playerTanks) {
-        if (i > 0) {
-            playerTanks[i].hideMarker();
-        }
-    }
-
     // Position each tank on the field
     positionTanks();
 
+    // Prep each tank for battle
     for (var i in playerTanks) {
         playerTanks[i].setMovesLeft(maxMoves);
-        stage.addChild(playerTanks[i]);
         playerTanks[i].resetHealth();
+        playerTanks[i].hideMarker();
+        stage.addChild(playerTanks[i]);
     }
 
     currentTankIndex = 0;
     currentTank = playerTanks[currentTankIndex];
+
+    // Show the marker on the first player in the game
+    currentTank.showMarker();
 }
 
 // Used for initializing the positions of the tanks
 function positionTanks() {
-    var divisionSize = stageXblocks / (playerTanks.length);
+    var divisionSize = stageXblocks / playerTanks.length;
     for (var i in playerTanks) {
         var xPosition = (i * divisionSize) + (divisionSize / 2);
         xPosition = (xPosition <= stageXblocks / 2) ? Math.floor(xPosition) : Math.ceil(xPosition);
@@ -266,7 +259,15 @@ function positionTanksHeight() {
     for (var i in playerTanks) {
         if (!playerTanks[i].isDead()) {
             var xPosition = parseInt(playerTanks[i].x / landBlockSize);
-            playerTanks[i].y = stageYdimens - (blocks[xPosition].length * landBlockSize);
+            var initialY = playerTanks[i].y / landBlockSize;
+            var newY = blocks[xPosition].length * landBlockSize;
+            playerTanks[i].y = stageYdimens - newY;
+
+            // Add fall damage if it applies
+            var deltaPos = initialY - newY;
+            if (deltaPos > maxMoveHeight) {
+                currentTank.damageTank((deltaPos - maxMoveHeight) * 10);
+            }
         }
     }
 }
@@ -344,13 +345,19 @@ function initUI() {
 
     //Next Ammo Button
     btnNextAmmo = new ArrowButton(180);
-    btnNextAmmo.addEventListener("click", function() { currentTank.nextMissile(); });
+    btnNextAmmo.addEventListener("click", function() {
+        if (!waitingForMissiles) {
+            currentTank.nextMissile();
+        }
+    });
     btnNextAmmo.x = 390 + 25;
 
     //Previous Ammo Button
     btnPreviousAmmo = new ArrowButton(0);
     btnPreviousAmmo.addEventListener("click", function() {
-        currentTank.previousMissile();
+        if (!waitingForMissiles) {
+            currentTank.previousMissile();
+        }
     });
     btnPreviousAmmo.x = 390 - 25;
     //Right move button
