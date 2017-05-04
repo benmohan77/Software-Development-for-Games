@@ -36,7 +36,16 @@
 	}
 
 	function getTextString(missileType, buyCount) {
-		return missileType.name + "\r\rOwn: " + missileType.count + "    Price: " + missileType.cost + "    Buy: " + buyCount;
+		return missileType.name + "\r\rOwn: " + space(missileType.count) + "    Price: " + space(missileType.cost) + "    Buy: " + buyCount;
+	}
+
+	function space(num) {
+		var str = num.toString();
+		if (num < 10)
+			str += "  ";
+		else if (num < 100)
+			str += " ";
+		return str;
 	}
 
 	function getBuyCount() {
