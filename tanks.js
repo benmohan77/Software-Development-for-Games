@@ -141,7 +141,6 @@ function game_tick(event) {
         //createjs.Ticker.removeAllEventListeners();
         lblBarrelRotation.text = "";
         stage.removeChild(lblBarrelRotation);
-        createjs.Ticker.removeEventListener("tick", game_tick);
         var gameover = new createjs.Text("Game Over", "30px Arial", "#000000");
         gameover.x = (stageXdimens / 2) - 77;
         gameover.y = (stageYdimens / 2) - 15;
@@ -150,6 +149,7 @@ function game_tick(event) {
         cont.x = (stageXdimens / 2) - 50;
         cont.y = (stageYdimens / 2) + 30;
         cont.addEventListener("click", function() {
+            createjs.Ticker.removeEventListener("tick", game_tick);
             stage.removeAllChildren();
             openMenu(playerTanks[0], 0, playerTanks.length);
             stage.update();
@@ -291,7 +291,7 @@ function playerLabel() {
     lblBarrelRotation.text = currentTank.getBarrelRotation();
     lblMovesLeft.text = currentTank.getMovesLeft();
     lblPowerLevel.text = currentTank.getPowerLevel();
-    lblAmmoType.text = currentTank.selectedMissile.id.toUpperCase() + ": " + currentTank.selectedMissile.count;
+    lblAmmoType.text = currentTank.selectedMissile.name + " (" + currentTank.selectedMissile.count + ")";
 }
 
 //initializes the buttons for controlling the tanks
@@ -340,7 +340,7 @@ function initUI() {
 
     //Ammo Type Label
     lblAmmoType = new createjs.Text("", "10px Arial", "#000000");
-    lblAmmoType.x = 370;
+    lblAmmoType.x = 360;
     lblAmmoType.y = 12;
 
     //Next Ammo Button
@@ -496,7 +496,7 @@ function get2DArray(size) {
 function shoot() {
     if (!waitingForMissiles) {
         if (currentTank.selectedMissile.count > 0) {
-            activeMissiles.push(currentTank.getMissile(landBlockSize));
+            activeMissiles.push.apply(activeMissiles, currentTank.getMissiles(landBlockSize));
             //currentTank.fireMissile();
             currentTank.setMovesLeft(maxMoves);
             currentTank.hideMarker();

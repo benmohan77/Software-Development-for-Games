@@ -1,5 +1,5 @@
 (function() {
-    var Tank = function(playerName, barrelRotation, tankPNG, barrelPNG) {
+    var Tank = function(playerName, barrelRotation, tankPNG, barrelPNG, initialMissiles) {
         var tank = new createjs.Container();
 
         // Create tank bitmap
@@ -55,22 +55,19 @@
         tank.increasePowerLevel = increasePowerLevel;
         tank.showMarker = showMarker;
         tank.hideMarker = hideMarker;
-        tank.getMissile = getMissile;
+        tank.getMissiles = getMissiles;
         tank.getMoney = getMoney;
-        tank.getNormalCost = getNormalCost;
-        tank.getBigCost = getBigCost;
-        tank.getFastCost = getFastCost;
+        // tank.getNormalCost = getNormalCost;
+        // tank.getBigCost = getBigCost;
+        // tank.getFastCost = getFastCost;
         tank.addMoney = addMoney;
         tank.removeMoney = removeMoney;
         tank.addMissiles = addMissiles;
         tank.resetHealth = resetHealth;
-        tank.MISSILES = {
-            normal: { id: "normal", count: 20, cost: 1 },
-            big: { id: "big", count: 1, cost: 50 },
-            fast: { id: "fast", count: 3, cost: 20 }
-        };
-        tank.selectedMissile = tank.MISSILES.normal;
-
+        tank.getAllMissiles = getAllMissiles;
+        tank.missiles = JSON.parse(JSON.stringify(initialMissiles));
+        tank.selectedIndex = 0;
+        tank.selectedMissile = tank.missiles[tank.selectedIndex];
 
         return tank;
     }
@@ -92,31 +89,20 @@
     }
 
     function nextMissile() {
-        switch (this.selectedMissile) {
-            case this.MISSILES.normal:
-                this.selectedMissile = this.MISSILES.big;
-                break;
-            case this.MISSILES.big:
-                this.selectedMissile = this.MISSILES.fast;
-                break;
-            case this.MISSILES.fast:
-                this.selectedMissile = this.MISSILES.normal;
-                break;
-        }
+        do {
+            this.selectedIndex = ++this.selectedIndex % this.missiles.length;
+            this.selectedMissile = this.missiles[this.selectedIndex];
+        } while (this.selectedMissile.count === 0)
     }
 
     function previousMissile() {
-        switch (this.selectedMissile) {
-            case this.MISSILES.normal:
-                this.selectedMissile = this.MISSILES.fast;
-                break;
-            case this.MISSILES.fast:
-                this.selectedMissile = this.MISSILES.big;
-                break;
-            case this.MISSILES.big:
-                this.selectedMissile = this.MISSILES.normal;
-                break;
-        }
+        do {
+            this.selectedIndex--;
+            if (this.selectedIndex < 0)
+                this.selectedIndex = this.missiles.length - 1;
+            //this.selectedIndex = (--this.selectedIndex) % this.missiles.length; // Why doesn't mod work here??
+            this.selectedMissile = this.missiles[this.selectedIndex];
+        } while (this.selectedMissile.count === 0)
     }
 
 
@@ -189,47 +175,68 @@
     }
 
     function addMoney(amount) {
-        this.money = this.money + amount;
+        this.money += amount;
     }
 
-    function removeMoney() {
-        this.money = this.money - amount;
-    }
-
-    function resetHealth() {
-        this.health = 100;
-    }
-
-    function getNormalCost() {
-        return this.MISSILES.normal.cost;
-    }
-
-    function getBigCost() {
-        return this.MISSILES.big.cost;
-    }
-
-    function getFastCost() {
-        return this.MISSILES.fast.cost;
-    }
-
-    function addMissiles(normal, big, fast) {
-        this.MISSILES.normal.count = this.MISSILES.normal.count + normal;
-        this.MISSILES.big.count = this.MISSILES.big.count + big;
-        this.MISSILES.fast.count = this.MISSILES.fast.count + fast;
-
+    function removeMoney(amount) {
+        this.money -= amount;
     }
 
     function getMoney() {
         return this.money;
     }
 
-    /* FUNCTIONS RELATING TO THE SHOOTING OF MISSILES */
-    function getMissile(landBlockSize) {
+    function resetHealth() {
+        this.health = 100;
+    }
+
+    // function getNormalCost() {
+    //     return this.missiles.normal.cost;
+    // }
+
+    // function getBigCost() {
+    //     return this.missiles.big.cost;
+    // }
+
+    // function getFastCost() {
+    //     return this.missiles.fast.cost;
+    // }
+
+    function addMissiles(normal, big, fast) {
+        // this.missiles.normal.count = this.missiles.normal.count + normal;
+        // this.missiles.big.count = this.missiles.big.count + big;
+        // this.missiles.fast.count = this.missiles.fast.count + fast;
+    }
+
+    /* FUNCTIONS RELATING TO THE SHOOTING OF missiles */
+    function getMissiles(landBlockSize) {
         if (this.selectedMissile.count > 0) {
             this.selectedMissile.count--;
-            return Missile(this.selectedMissile.id, this.getBarrelRotation(), this.getPowerLevel() / 7, this.x + (landBlockSize / 2), this.y + (landBlockSize / 2));
-
+            var missileGroup = [];
+            
+            switch (this.selectedMissile.id) {
+                case "tracer":
+                    missileGroup.push(Missile(this.selectedMissile, this.getBarrelRotation() - 10, this.getPowerLevel() / 7, this.x + (landBlockSize / 2), this.y + (landBlockSize / 2)));
+                    missileGroup.push(Missile(this.selectedMissile, this.getBarrelRotation() - 5, this.getPowerLevel() / 7, this.x + (landBlockSize / 2), this.y + (landBlockSize / 2)));
+                    missileGroup.push(Missile(this.selectedMissile, this.getBarrelRotation(), this.getPowerLevel() / 7, this.x + (landBlockSize / 2), this.y + (landBlockSize / 2)));
+                    missileGroup.push(Missile(this.selectedMissile, this.getBarrelRotation() + 5, this.getPowerLevel() / 7, this.x + (landBlockSize / 2), this.y + (landBlockSize / 2)));
+                    missileGroup.push(Missile(this.selectedMissile, this.getBarrelRotation() + 10, this.getPowerLevel() / 7, this.x + (landBlockSize / 2), this.y + (landBlockSize / 2)));
+                    break;
+                case "triple":
+                    missileGroup.push(Missile(this.selectedMissile, this.getBarrelRotation() - 5, this.getPowerLevel() / 7, this.x + (landBlockSize / 2), this.y + (landBlockSize / 2)));
+                    missileGroup.push(Missile(this.selectedMissile, this.getBarrelRotation(), this.getPowerLevel() / 7, this.x + (landBlockSize / 2), this.y + (landBlockSize / 2)));
+                    missileGroup.push(Missile(this.selectedMissile, this.getBarrelRotation() + 5, this.getPowerLevel() / 7, this.x + (landBlockSize / 2), this.y + (landBlockSize / 2)));
+                    break;
+                default:
+                    missileGroup.push(Missile(this.selectedMissile, this.getBarrelRotation(), this.getPowerLevel() / 7, this.x + (landBlockSize / 2), this.y + (landBlockSize / 2)));
+            }
+            //Missile(this.selectedMissile.id, this.getBarrelRotation(), this.getPowerLevel() / 7, this.x + (landBlockSize / 2), this.y + (landBlockSize / 2));
+            return missileGroup;
         }
+    }
+
+    function getAllMissiles() {
+        return this.missiles;
     }
 
     window.Tank = Tank;

@@ -121,6 +121,6 @@ function createTanks(playerCount) {
     for (i = 0; i < playerCount; i++) {
         console.log(i);
         s = "p" + (i + 1) + "TankPNG";
-        playerTanks.push(new Tank(tankNames[i], (i + 1 <= (playerCount / 2)) ? 0 : 180, s, "tankBarrel"));
+        playerTanks.push(new Tank(tankNames[i], (i + 1 <= (playerCount / 2)) ? 0 : 180, s, "tankBarrel", MISSILES));
     }
 }

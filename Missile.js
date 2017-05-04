@@ -1,3 +1,11 @@
+window.MISSILES = [
+    { id: "normal", name: "Single Shot", count: 20, cost: 5, radius: 40, damage: 60 },
+    { id: "big", name: "Big Shot", count: 1, cost: 75, radius: 100, damage: 90 },
+    { id: "sniper", name: "Sniper", count: 3, cost: 35, radius: 25, damage: 100 },
+    { id: "triple", name: "Triple Shot", count: 1, cost: 50, radius: 40, damage: 50 },
+    { id: "tracer", name: "Tracer", count: 2, cost: 5, radius: 0, damage: 0 }
+];
+
 (function() {
 
     var Missile = function(missileType, startingAngle, velocity, startingX, startingY) {
@@ -18,28 +26,9 @@
 
         tempMissile.startingAngle = startingAngle;
 
-        switch (missileType) {
-            case "fast":
-                console.log("fast");
-                tempMissile.velocityX = velocity * Math.cos(toRadians(startingAngle)) * 4;
-                tempMissile.velocityY = -velocity * Math.sin(toRadians(startingAngle)) * 4;
-                tempMissile.explosionRadius = 25;
-                tempMissile.damageAmount = 100;
-                break;
-            case "big":
-                console.log("big");
-                tempMissile.velocityX = (velocity / 2) * Math.cos(toRadians(startingAngle));
-                tempMissile.velocityY = (-velocity / 2) * Math.sin(toRadians(startingAngle));
-                tempMissile.explosionRadius = 100;
-                tempMissile.damageAmount = 90;
-                break;
-            default:
-                tempMissile.velocityX = velocity * Math.cos(toRadians(startingAngle));
-                tempMissile.velocityY = -velocity * Math.sin(toRadians(startingAngle));
-                tempMissile.explosionRadius = 40;
-                tempMissile.damageAmount = 60;
-                break;
-        }
+        tempMissile.explosionRadius = missileType.radius;
+        tempMissile.damageAmount = missileType.damage;
+
         tempMissile.velocityX = velocity * Math.cos(toRadians(startingAngle));
         tempMissile.velocityY = -velocity * Math.sin(toRadians(startingAngle));
 
