@@ -81,6 +81,8 @@ var tankNames = [
     "Steve"
 ];
 
+var firstTickAfterEnd;
+
 function newGame(players) {
     stage.removeAllChildren();
     createjs.Ticker.setFPS(ticksPerSec);
@@ -115,7 +117,7 @@ function newGame(players) {
     // KEYBOARD
     window.onkeydown = handleKeyDown;
     window.onkeyup = handleKeyUp;
-
+    firstTickAfterEnd = true;
     stage.update();
 
 }
@@ -137,8 +139,9 @@ function game_tick(event) {
             stage.removeChild(playerTanks[i]);
         }
     }
-    if (deathCount >= playerTanks.length - 1) {
+    if (deathCount >= playerTanks.length - 1 && firstTickAfterEnd) {
         //createjs.Ticker.removeAllEventListeners();
+        firstTickAfterEnd = false;
         lblBarrelRotation.text = "";
         stage.removeChild(lblBarrelRotation);
         var gameover = new createjs.Text("Game Over", "30px Arial", "#000000");
@@ -598,7 +601,7 @@ function moveTankLeft() {
         if (currentTank.getMovesLeft() > 0 && currentTank.x > 0) {
             var xPosition = parseInt(currentTank.x / landBlockSize) - 1;
             var yPosition = blocks[xPosition].length;
-            
+
             // Make sure the tank doesn't move more than two blocks above itself
             var deltaPos = yPosition - blocks[xPosition + 1].length;
             if (deltaPos <= maxMoveHeight) {
